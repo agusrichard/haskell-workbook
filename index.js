@@ -23,9 +23,17 @@ app.get('/', function(req, res) {
   res.json('Welcome to our API')
 })
 
+const rootValue = {
+  userId: (args, request) => {
+    console.log('index rootValue', request.userId)
+    return request.userId
+  }
+}
+
 app.use(authentication)
 app.use('/graphql', graphqlHTTP({
   schema,
+  rootValue,
   graphiql: true
 }))
 

@@ -48,8 +48,9 @@ const RootQuery = new graphql.GraphQLObjectType({
   fields: {
     users: {
       type: new graphql.GraphQLList(UserType),
-      resolve: (source, args) => {
-        console.log('RootQuery')
+      resolve: (source, args, context, { rootValue }) => {
+        console.log('rootValue', rootValue.userId)
+        return User.find({})
       }
     }
   }
