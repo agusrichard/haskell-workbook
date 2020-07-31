@@ -1,5 +1,6 @@
 const graphql = require('graphql')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const Book = require('../models/book')
 
@@ -65,11 +66,10 @@ const Mutation = new graphql.GraphQLObjectType({
         password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
       },
       resolve: (source, args) => {
-        const salt = bcrypt.genSaltSync(10)
         let user = User({
           username: args.username,
           email: args.email,
-          password: bcrypt.hashSync(args.password, salt)
+          password: bcrypt.hashSync(args.password, process.env.SALT)
         })
         return user.save()
       }
@@ -80,8 +80,18 @@ const Mutation = new graphql.GraphQLObjectType({
         email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
         password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
       },
-      resolve: (source, args) => {
-        console.log('login')
+      resolve: async (source, args) => {
+        let user = await User.findOne({ email: args.email })
+        if (user.password) {
+          if (bcrypt.compareSync(args.password, user.password)) {
+            let token = jwt.sign({ userId: user.id, username: user.username }, process.env.SECRET_KEY)
+            return {token, user}
+          } else {
+            return null
+          }
+        } else {
+          return null
+        }
       }
     }
   }
