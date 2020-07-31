@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const cors = require('cors')
 const { graphqlHTTP } = require('express-graphql')
 const schema = require('./src/schemas/schema')
+const { authentication } = require('./src/middlewares/authentication')
 
 require('dotenv').config()
 
@@ -22,6 +23,7 @@ app.get('/', function(req, res) {
   res.json('Welcome to our API')
 })
 
+app.use(authentication)
 app.use('/graphql', graphqlHTTP({
   schema,
   graphiql: true
