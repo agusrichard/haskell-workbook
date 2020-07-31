@@ -1,6 +1,8 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
+const { graphqlHTTP } = require('express-graphql')
+const schema = require('./src/schemas/schema')
 
 require('dotenv').config()
 
@@ -19,5 +21,10 @@ app.use(cors())
 app.get('/', function(req, res) {
   res.json('Welcome to our API')
 })
+
+app.use('/graphql', graphqlHTTP({
+  schema,
+  graphiql: true
+}))
 
 app.listen(process.env.PORT, () => console.log(`Running on port ${process.env.PORT}`))
