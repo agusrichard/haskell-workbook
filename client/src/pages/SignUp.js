@@ -11,10 +11,9 @@ export default function SignUp(props) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [signup] = useMutation(SIGNUP)
+  const [signup, { data, loading }] = useMutation(SIGNUP)
   const handleSubmit = (event) => {
     event.preventDefault()
-    console.log(username, email, password)
     signup({ variables: { username, email, password } })
     props.history.push('/login')
   }
