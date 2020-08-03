@@ -2,9 +2,9 @@ const mongoose = require('mongoose')
 
 const bookSchema = new mongoose.Schema({
   userId: String,
-  haveRead: Boolean,
+  done: Boolean,
   title: String,
-  start: Date,
+  start: { type: Date, default: Date.now },
   end: Date,
   comment: String
 })

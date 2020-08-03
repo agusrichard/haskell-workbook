@@ -1,6 +1,6 @@
 const graphql = require('graphql')
 const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
+const { getUserId, login } = require('../utils')
 
 
 const UserType = new graphql.GraphQLObjectType({
@@ -13,7 +13,7 @@ const UserType = new graphql.GraphQLObjectType({
     fullname: { type: graphql.GraphQLString },
     books: {
       type: BookType,
-      resolve: (source, args) => {
+      resolve: (parent, args) => {
         console.log('something here')
       }
     }
@@ -30,7 +30,13 @@ const BookType = new graphql.GraphQLObjectType({
     end: { type: graphql.GraphQLString },
     comment: { type: graphql.GraphQLString },
     user: { 
-      type: UserType
+      type: UserType,
+      resolve: async (parent, args, context) => {
+        console.log('BookType parent', parent.id)
+        const user = context.User.find({ 'books': { $gte: parent.id } })
+        console.log('user', user)
+        return user
+      }
     }
   })
 })
@@ -48,12 +54,16 @@ const RootQuery = new graphql.GraphQLObjectType({
   fields: {
     users: {
       type: new graphql.GraphQLList(UserType),
-      resolve: (source, args, context) => {
-        if (context.userId) {
-          return context.User.find({})
-        } else {
-          throw new Error('Not Authenticated')
-        }
+      resolve: (parent, args, context) => {
+        const userId = getUserId(context)
+        return context.User.find({})
+      }
+    },
+    books: {
+      type: new graphql.GraphQLList(BookType),
+      resolve: (parent, args, context) => {
+        const userId = getUserId(context)
+        return context.Book.find({})
       }
     }
   }
@@ -67,12 +77,14 @@ const Mutation = new graphql.GraphQLObjectType({
       args: {
         username: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
         email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-        password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+        password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+        fullname: { type: graphql.GraphQLString } 
       },
-      resolve: async (source, args, context) => {
+      resolve: async (parent, args, context) => {
         let user = context.User({
           username: args.username,
           email: args.email,
+          fullname: args.fullname,
           password: bcrypt.hashSync(args.password, process.env.SALT)
         })
         return await user.save()
@@ -84,18 +96,27 @@ const Mutation = new graphql.GraphQLObjectType({
         email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
         password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
       },
-      resolve: async (source, args, context) => {
-        let user = await context.User.findOne({ email: args.email })
-        if (user.password) {
-          if (bcrypt.compareSync(args.password, user.password)) {
-            let token = jwt.sign({ userId: user.id, username: user.username }, process.env.SECRET_KEY)
-            return {token, user}
-          } else {
-            return null
-          }
-        } else {
-          return null
-        }
+      resolve: async (parent, args, context) => {
+        const user = await context.User.findOne({ email: args.email })
+        return login(user, args.password)
+      }
+    },
+    addBook: {
+      type: BookType,
+      args: {
+        title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+      },
+      resolve: async (parent, args, context) => {
+        const userId = getUserId(context)
+        const user = await context.User.findById(userId)
+        let book = context.Book({
+          userId,
+          done: false,
+          title: args.title
+        })
+        user.books.push(book.id)
+        user.save()
+        return await book.save()
       }
     }
   }
