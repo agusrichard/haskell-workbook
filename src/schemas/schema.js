@@ -2,6 +2,13 @@ const graphql = require('graphql')
 const bcrypt = require('bcrypt')
 const { getUserId, login } = require('../utils')
 
+const DateTime = new graphql.GraphQLScalarType({
+  name: 'DateTime',
+  parseValue: (value) => {
+    return Date.parse(value)
+  }
+})
+
 
 const UserType = new graphql.GraphQLObjectType({
   name: 'User',
@@ -31,8 +38,8 @@ const BookType = new graphql.GraphQLObjectType({
     haveRead: { type: graphql.GraphQLBoolean },
     title: { type: graphql.GraphQLString },
     author: { type: graphql.GraphQLString },
-    start: { type: graphql.GraphQLString },
-    end: { type: graphql.GraphQLString },
+    start: { type: DateTime },
+    end: { type: DateTime },
     comment: { type: graphql.GraphQLString },
     user: { 
       type: UserType,
@@ -132,11 +139,9 @@ const Mutation = new graphql.GraphQLObjectType({
       },
       resolve: async (parent, args, context) => {
         const userId = getUserId(context)
-        return context.Book.findOneAndUpdate({
-          _id: args.bookId
-        }, {
+        return context.Book.findByIdAndUpdate(args.bookId, {
           done: true,
-          end: Date.now,
+          end: Date.now(),
           comment: args.comment
         })
       }
