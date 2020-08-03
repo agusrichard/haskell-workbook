@@ -2,8 +2,10 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
 const { graphqlHTTP } = require('express-graphql')
-const schema = require('./src/schemas/schema')
-const { authentication } = require('./src/middlewares/authentication')
+const schema = require('./schemas/schema')
+const { authentication } = require('./middlewares/authentication')
+const Book = require('./models/book')
+const User = require('./models/user')
 
 require('dotenv').config()
 
@@ -23,18 +25,14 @@ app.get('/', function(req, res) {
   res.json('Welcome to our API')
 })
 
-const rootValue = {
-  userId: (args, request) => {
-    console.log('index rootValue', request.userId)
-    return request.userId
-  }
-}
 
 app.use(authentication)
-app.use('/graphql', graphqlHTTP({
-  schema,
-  rootValue,
-  graphiql: true
+app.use('/graphql', graphqlHTTP((request) => {
+  return {
+    schema,
+    graphiql: true,
+    context: { ...request, Book, User }
+  }
 }))
 
 app.listen(process.env.PORT, () => console.log(`Running on port ${process.env.PORT}`))

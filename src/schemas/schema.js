@@ -1,8 +1,6 @@
 const graphql = require('graphql')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const User = require('../models/user')
-const Book = require('../models/book')
 
 
 const UserType = new graphql.GraphQLObjectType({
@@ -26,12 +24,14 @@ const BookType = new graphql.GraphQLObjectType({
   name: 'Book',
   fields: () => ({
     id: { type: graphql.GraphQLID },
-    userId: { type: graphql.GraphQLID },
     haveRead: { type: graphql.GraphQLBoolean },
     title: { type: graphql.GraphQLString },
     start: { type: graphql.GraphQLString },
     end: { type: graphql.GraphQLString },
-    comment: { type: graphql.GraphQLString }
+    comment: { type: graphql.GraphQLString },
+    user: { 
+      type: UserType
+    }
   })
 })
 
