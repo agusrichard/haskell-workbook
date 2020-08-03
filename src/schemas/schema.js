@@ -48,9 +48,12 @@ const RootQuery = new graphql.GraphQLObjectType({
   fields: {
     users: {
       type: new graphql.GraphQLList(UserType),
-      resolve: (source, args, context, { rootValue }) => {
-        console.log('rootValue', rootValue.userId)
-        return User.find({})
+      resolve: (source, args, context) => {
+        if (context.userId) {
+          return context.User.find({})
+        } else {
+          throw new Error('Not Authenticated')
+        }
       }
     }
   }
@@ -66,13 +69,13 @@ const Mutation = new graphql.GraphQLObjectType({
         email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
         password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
       },
-      resolve: (source, args) => {
-        let user = User({
+      resolve: async (source, args, context) => {
+        let user = context.User({
           username: args.username,
           email: args.email,
           password: bcrypt.hashSync(args.password, process.env.SALT)
         })
-        return user.save()
+        return await user.save()
       }
     },
     login: {
@@ -81,8 +84,8 @@ const Mutation = new graphql.GraphQLObjectType({
         email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
         password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
       },
-      resolve: async (source, args) => {
-        let user = await User.findOne({ email: args.email })
+      resolve: async (source, args, context) => {
+        let user = await context.User.findOne({ email: args.email })
         if (user.password) {
           if (bcrypt.compareSync(args.password, user.password)) {
             let token = jwt.sign({ userId: user.id, username: user.username }, process.env.SECRET_KEY)

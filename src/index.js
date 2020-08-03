@@ -31,7 +31,7 @@ app.use('/graphql', graphqlHTTP((request) => {
   return {
     schema,
     graphiql: true,
-    context: { ...request, Book, User }
+    context: { userId: request.userId, Book, User }
   }
 }))
 
