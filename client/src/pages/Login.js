@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Input from '../components/Input'
 import Container from '../components/Container'
 import Button from '../components/Button'
+import { LOGIN } from '../graphql/query'
 
 export default function Login(props) {
   return (
