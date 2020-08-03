@@ -12,9 +12,13 @@ const UserType = new graphql.GraphQLObjectType({
     password: { type: graphql.GraphQLString },
     fullname: { type: graphql.GraphQLString },
     books: {
-      type: BookType,
-      resolve: (parent, args) => {
-        console.log('something here')
+      type: new graphql.GraphQLList(BookType),
+      resolve: async (parent, args, context) => {
+        getUserId(context)
+        const user = await context.User.findById(parent.id)
+        return user.books.map(async book => {
+          return await context.Book.findById(book)
+        })
       }
     }
   })
@@ -26,23 +30,23 @@ const BookType = new graphql.GraphQLObjectType({
     id: { type: graphql.GraphQLID },
     haveRead: { type: graphql.GraphQLBoolean },
     title: { type: graphql.GraphQLString },
+    author: { type: graphql.GraphQLString },
     start: { type: graphql.GraphQLString },
     end: { type: graphql.GraphQLString },
     comment: { type: graphql.GraphQLString },
     user: { 
       type: UserType,
       resolve: async (parent, args, context) => {
-        console.log('BookType parent', parent.id)
-        const user = context.User.find({ 'books': { $gte: parent.id } })
-        console.log('user', user)
-        return user
+        getUserId(context)
+        const book = await context.Book.findById(parent.id)
+        return await context.User.findById(book.userId)
       }
     }
   })
 })
 
-const LoginType = new graphql.GraphQLObjectType({
-  name: 'Login',
+const AuthPayload = new graphql.GraphQLObjectType({
+  name: 'AuthPayload',
   fields: () => ({
     token: { type: graphql.GraphQLString },
     user: { type: UserType }
@@ -91,7 +95,7 @@ const Mutation = new graphql.GraphQLObjectType({
       }
     },
     login: {
-      type: LoginType,
+      type: AuthPayload,
       args: {
         email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
         password: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
@@ -104,19 +108,37 @@ const Mutation = new graphql.GraphQLObjectType({
     addBook: {
       type: BookType,
       args: {
-        title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+        title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+        author: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
       },
       resolve: async (parent, args, context) => {
         const userId = getUserId(context)
         const user = await context.User.findById(userId)
-        let book = context.Book({
+        const book = context.Book({
           userId,
-          done: false,
+          author: args.author,
           title: args.title
         })
         user.books.push(book.id)
         user.save()
         return await book.save()
+      }
+    },
+    doneRead: {
+      type: BookType,
+      args: {
+        bookId: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+        comment: { type: graphql.GraphQLString }
+      },
+      resolve: async (parent, args, context) => {
+        const userId = getUserId(context)
+        return context.Book.findOneAndUpdate({
+          _id: args.bookId
+        }, {
+          done: true,
+          end: Date.now,
+          comment: args.comment
+        })
       }
     }
   }
