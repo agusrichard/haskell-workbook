@@ -6,13 +6,19 @@ import { GET_USERS_BOOKS } from '../graphql/query'
 
 export default function BookList(props) {
   const { state } = useContext(Context)
-  const { loading, data, error } = useQuery(GET_USERS_BOOKS)
-
-  useEffect(() => {
-    if (!state.isLoggedIn) {
-      props.history.push('/login')
+  const { loading, data, error } = useQuery(GET_USERS_BOOKS, {
+    context: {
+      headers: {
+        authorization: `Bearer ${state.token}`
+      }
     }
-  }, [state.isLoggedIn])
+  })
+
+  // useEffect(() => {
+  //   if (!state.isLoggedIn) {
+  //     props.history.push('/login')
+  //   }
+  // }, [])
   
   if (!loading) {
     console.log('BookList data', data)

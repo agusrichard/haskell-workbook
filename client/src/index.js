@@ -10,13 +10,7 @@ import ContextProvider from './contexts/context'
 
 const client = new ApolloClient({
   uri: process.env.REACT_APP_SERVER,
-  cache: new InMemoryCache(),
-  headers: {
-    authorization: (() => {
-      const token = localStorage.getItem('token')
-      return token ? `Bearer ${token}` : ''
-    })()
-  }
+  cache: new InMemoryCache()
 });
 
 ReactDOM.render(

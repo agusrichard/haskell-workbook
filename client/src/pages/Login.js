@@ -11,10 +11,9 @@ export default function Login(props) {
   const { dispatchLogin } = useContext(Context)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [login, { data, loading, error, client }] = useMutation(LOGIN, { 
+  const [login, { data, loading, error }] = useMutation(LOGIN, { 
     errorPolicy: 'all'
   })
-  console.log(client)
   const handleSubmit = async (event) => {
     event.preventDefault()
     try {
