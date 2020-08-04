@@ -29,7 +29,7 @@ export default function Login(props) {
 
   return (
     <Container>
-      <h1 className="title" style={{ marginTop: 50, marginBottom: 75 }}>Login</h1>
+      <h1 className="title" style={{ marginTop: 70, marginBottom: 75 }}>Login</h1>
         { error && <p className="error-text">{ error.message }</p> }
       <form onSubmit={ handleSubmit }>
       <Input 

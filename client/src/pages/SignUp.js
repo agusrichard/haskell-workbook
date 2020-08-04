@@ -20,7 +20,7 @@ export default function SignUp(props) {
 
   return (
     <Container>
-      <h1 className="title" style={{ marginTop: 30, marginBottom: 50 }}>Sign Up</h1>
+      <h1 className="title" style={{ marginTop: 60, marginBottom: 50 }}>Sign Up</h1>
       <form onSubmit={handleSubmit}>
         <Input 
           placeholder="Username" 

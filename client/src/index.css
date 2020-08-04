@@ -23,10 +23,11 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  height: 500px;
+  height: 600px;
   width: 400px;
   transform: translate(-50%, -50%);
   border-radius: 10px;
+  overflow-y: auto;
 }
 
 .title {
@@ -115,7 +116,7 @@ body {
 
 .bottom-link {
   display: block;
-  margin-top: 20px;
+  margin-top: 50px;
   text-decoration-line: none;
   color: white;
   transition: ease 0.2s;
@@ -134,4 +135,43 @@ body {
   border-radius: 10px;
   height: 30px;
   line-height: 30px;
+}
+
+
+/* ======================== Book List ======================== */
+.choose-button {
+  background-color: #F18F01;
+  color: white;
+  border-style: none;
+  margin: 0 10px;
+  padding: 5px 10px;
+  width: 25%;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: ease 0.3s;
+}
+
+.choose-button:hover {
+  background-color: #20063B;
+  transition: ease 0.3s;
+}
+
+
+/* ======================== Book Item ======================== */
+.book-item {
+  background-color: #fff;
+  width: 80%;
+  margin: 25px auto;
+  border-radius: 5px;
+  text-align: left;
+  padding: 1px 10px;
+  box-shadow: 0 4px 8px 0 #20063B, 0 6px 20px #20063B;
+  transition: ease 0.3s;
+  font-family: 'Roboto', sans-serif;
+}
+
+.book-item:hover {
+  cursor: pointer;
+  box-shadow: 0 4px 8px 0 #F18F01, 0 6px 20px #F18F01;
+  transition: ease 0.3s;
 }
