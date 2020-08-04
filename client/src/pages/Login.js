@@ -16,10 +16,14 @@ export default function Login(props) {
   })
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const { errors, data } = await login({ variables: { email, password } })
-    if (!errors) {
-      dispatchLogin(data.login.token)
-      props.history.push('/booklist')
+    try {
+      const { errors, data } = await login({ variables: { email, password } })
+      if (!errors) {
+        dispatchLogin(data.login.token)
+        props.history.push('/booklist')
+      }
+    } catch(err) {
+      console.log(err)
     }
   }
 

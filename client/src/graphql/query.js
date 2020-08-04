@@ -21,4 +21,20 @@ const LOGIN = gql`
   }
 `
 
-export { SIGNUP, LOGIN }
+const GET_USERS_BOOKS = gql`
+  query {
+    user {
+      books {
+        id
+        done
+        title
+        author
+        start
+        end
+        comment
+      }
+    }
+  }
+`
+
+export { SIGNUP, LOGIN, GET_USERS_BOOKS }

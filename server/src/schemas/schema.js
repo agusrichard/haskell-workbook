@@ -35,7 +35,7 @@ const BookType = new graphql.GraphQLObjectType({
   name: 'Book',
   fields: () => ({
     id: { type: graphql.GraphQLID },
-    haveRead: { type: graphql.GraphQLBoolean },
+    done: { type: graphql.GraphQLBoolean },
     title: { type: graphql.GraphQLString },
     author: { type: graphql.GraphQLString },
     start: { type: DateTime },
@@ -75,6 +75,13 @@ const RootQuery = new graphql.GraphQLObjectType({
       resolve: (parent, args, context) => {
         const userId = getUserId(context)
         return context.Book.find({})
+      }
+    },
+    user: {
+      type: UserType,
+      resolve: (parent, args, context) => {
+        const userId = getUserId(context)
+        return context.User.findById(userId)
       }
     }
   }
