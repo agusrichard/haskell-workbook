@@ -8,7 +8,6 @@ export default function ContextProvider({ children }) {
   const [state, dispatch] = reducer()
 
   const dispatchLogin = (token) => {
-    console.log('dispatchLogin')
     localStorage.setItem('token', token)
     dispatch({ type: 'LOGIN', payload: token })
   }

@@ -11,9 +11,10 @@ export default function Login(props) {
   const { dispatchLogin } = useContext(Context)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [login, { data, loading, error }] = useMutation(LOGIN, { 
+  const [login, { data, loading, error, client }] = useMutation(LOGIN, { 
     errorPolicy: 'all'
   })
+  console.log(client)
   const handleSubmit = async (event) => {
     event.preventDefault()
     try {
@@ -30,7 +31,7 @@ export default function Login(props) {
   return (
     <Container>
       <h1 className="title" style={{ marginTop: 50, marginBottom: 75 }}>Login</h1>
-        { error && <p>{ error.message }</p> }
+        { error && <p className="error-text">{ error.message }</p> }
       <form onSubmit={ handleSubmit }>
       <Input 
           placeholder="Email"

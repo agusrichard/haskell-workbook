@@ -125,3 +125,13 @@ body {
   color: #20063B;
   transition: ease 0.2s;
 }
+
+.error-text {
+  color: #fff;
+  background-color: #F18F01;
+  width: 75%;
+  margin: auto;
+  border-radius: 10px;
+  height: 30px;
+  line-height: 30px;
+}
