@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { useMutation } from '@apollo/client'
 import { Link } from 'react-router-dom'
 import Input from '../components/Input'
@@ -8,7 +8,7 @@ import { LOGIN } from '../graphql/query'
 import { Context } from '../contexts/context'
 
 export default function Login(props) {
-  const { dispatchLogin } = useContext(Context)
+  const { state, dispatchLogin } = useContext(Context)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [login, { data, loading, error }] = useMutation(LOGIN, { 

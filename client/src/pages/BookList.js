@@ -14,18 +14,6 @@ export default function BookList(props) {
     }
   })
 
-  // useEffect(() => {
-  //   if (!state.isLoggedIn) {
-  //     props.history.push('/login')
-  //   }
-  // }, [])
-  
-  if (!loading) {
-    console.log('BookList data', data)
-  } {
-    console.log('BookList data', data, error)
-  }
-
   return (
     <Container>
       BookList
