@@ -10,7 +10,6 @@ function getUserId(context) {
 }
 
 function login(user, password) {
-  console.log('login user.password', user)
   if (user) {
     if (bcrypt.compareSync(password, user.password)) {
       let token = jwt.sign({ userId: user.id, username: user.username }, process.env.SECRET_KEY)

@@ -5,6 +5,7 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { BrowserRouter } from 'react-router-dom'
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import ContextProvider from './contexts/context'
 
 const client = new ApolloClient({
   uri: process.env.REACT_APP_SERVER,
@@ -14,9 +15,11 @@ const client = new ApolloClient({
 ReactDOM.render(
   <React.StrictMode>
     <ApolloProvider client={ client }>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ContextProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ContextProvider>
     </ApolloProvider>
   </React.StrictMode>,
   document.getElementById('root')

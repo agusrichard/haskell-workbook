@@ -1,18 +1,26 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { useMutation } from '@apollo/client'
 import { Link } from 'react-router-dom'
 import Input from '../components/Input'
 import Container from '../components/Container'
 import Button from '../components/Button'
 import { LOGIN } from '../graphql/query'
+import { Context } from '../contexts/context'
 
 export default function Login(props) {
+  const { dispatchLogin } = useContext(Context)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [login, { data, loading, error }] = useMutation(LOGIN)
-  const handleSubmit = (event) => {
+  const [login, { data, loading, error }] = useMutation(LOGIN, { 
+    errorPolicy: 'all'
+  })
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    login({ variables: { email, password } })
+    const { errors, data } = await login({ variables: { email, password } })
+    if (!errors) {
+      dispatchLogin(data.login.token)
+      props.history.push('/booklist')
+    }
   }
 
   return (
