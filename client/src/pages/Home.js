@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Container from '../components/Container'
+import Context from '../contexts/context'
 
 export default function Home(props) {
   return (

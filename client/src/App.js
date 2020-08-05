@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import BookList from './pages/BookList'
+import AddBook from './pages/AddBook'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
     return (
       <Switch>
         <Route exact path="/booklist" component={ BookList } />
+        <Route exact path="/addbook" component={ AddBook } />
         <Route component={ NotFound } />
       </Switch>
     )

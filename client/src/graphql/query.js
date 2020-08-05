@@ -37,4 +37,12 @@ const GET_USERS_BOOKS = gql`
   }
 `
 
-export { SIGNUP, LOGIN, GET_USERS_BOOKS }
+const ADD_BOOK = gql`
+  mutation AddBook($title: String!, $author: String!){
+    addBook(title: $title, author: $author) {
+      id
+    }
+  }
+`
+
+export { SIGNUP, LOGIN, GET_USERS_BOOKS, ADD_BOOK }

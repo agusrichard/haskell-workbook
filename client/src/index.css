@@ -139,6 +139,25 @@ body {
 
 
 /* ======================== Book List ======================== */
+.add-button {
+  color: #F18F01;
+  font-size: 30px;
+  position: absolute;
+  left: 20px;
+  top: 30px;
+  cursor: pointer;
+  transition: ease 0.3s;
+  box-shadow: 0 4px 8px 0 rgba(32, 6, 59, 0.5), 0 6px 20px 0 rgba(32, 6, 59, 0.5);
+  border-radius: 50%;
+}
+
+.add-button:hover {
+  color: #20063B;
+  transition: ease 0.3s;
+  box-shadow: 0 4px 8px 0 #F18F01, 0 6px 20px 0 #F18F01;
+}
+
+
 .choose-button {
   background-color: #F18F01;
   color: white;
