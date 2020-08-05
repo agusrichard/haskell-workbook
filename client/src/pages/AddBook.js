@@ -49,7 +49,7 @@ export default function AddBook(props) {
           onChange={(event) => setAuthor(event.target.value)}
           value={author}
         />
-        <Button title="Add" style={{ marginTop: 30 }}/>
+        <Button title="Add" style={{ marginTop: 30 }} loading={ loading }/>
       </form>
     </Container>
   )
