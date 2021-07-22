@@ -5,6 +5,7 @@
 ## List of Contents:
 ### 1. [Introduction](#content-1)
 ### 2. [Starting Out](#content-2)
+### 3. [Types and Typeclasses](#content-3)
 
 </br>
 
@@ -293,7 +294,120 @@
   [(1,"apple"),(2,"orange"),(3,"cherry"),(4,"mango")]  
   ```
 
+</br>
 
+---
+
+## [Types and Typeclasses](http://learnyouahaskell.com/types-and-typeclasses) <span id="content-3"><span>
+
+### Believe the type
+- Haskell has type inference. If we write a number, we don't have to tell Haskell it's a number. It can infer that on its own, so we don't have to explicitly write out the types of our functions and expressions to get things done.
+- A type is a kind of label that every expression has. It tells us in which category of things that expression fits. The expression True is a boolean, "hello" is a string, etc.
+- Checking type: </br>
+  ```haskell
+  ghci> :t 'a'  
+  'a' :: Char  
+  ghci> :t True  
+  True :: Bool  
+  ghci> :t "HELLO!"  
+  "HELLO!" :: [Char]  
+  ghci> :t (True, 'a')  
+  (True, 'a') :: (Bool, Char)  
+  ghci> :t 4 == 5  
+  4 == 5 :: Bool 
+  ```
+- `::` is read as "has type of".
+-  Examining the type of `"HELLO!"` yields a `[Char]`. The square brackets denote a list. So we read that as it being a list of characters.
+- Some common types:
+  - `Int` stands for integer. It's used for whole numbers. 7 can be an Int but 7.2 cannot. Int is bounded, which means that it has a minimum and a maximum value. Usually on 32-bit machines the maximum possible Int is 2147483647 and the minimum is -2147483648.
+  - `Integer` stands for, er … also integer. The main difference is that it's not bounded so it can be used to represent really really big numbers. I mean like really big. Int, however, is more efficient.
+  - `Float` is a real floating point with single precision.
+  - `Double` is a real floating point with double the precision!
+  - `Bool` is a boolean type. It can have only two values: True and False.
+  - `Char` represents a character. It's denoted by single quotes. A list of characters is a string.
+
+### Type variables
+- Type variables are similar to generics to other programming language.
+- Functions that have type variables are called polymorphic functions.
+- Although type variables can have names longer than one character, we usually give them names of a, b, c, d …
+- Snippet: </nr>
+  ```haskell
+  ghci> :t head  
+  head :: [a] -> a 
+  ghci> :t fst  
+  fst :: (a, b) -> a
+  ```
+
+### Typeclasses 101
+- A typeclass is a sort of interface that defines some behavior. If a type is a part of a typeclass, that means that it supports and implements the behavior the typeclass describes.
+- Snippet: </br>
+  ```haskell
+  ghci> :t (==)  
+  (==) :: (Eq a) => a -> a -> Bool 
+  ```
+- Everything before the => symbol is called a class constraint.
+- We can read the previous type declaration like this: the equality function takes any two values that are of the same type and returns a Bool. The type of those two values must be a member of the Eq class (this was the class constraint).
+- Any type where it makes sense to test for equality between two values of that type should be a member of the Eq class. All standard Haskell types except for IO (the type for dealing with input and output) and functions are a part of the Eq typeclass.
+- `Eq` is used for types that support equality testing. The functions its members implement are `==` and `/=.` So if there's an Eq class constraint for a type variable in a function, it uses `==` or `/=` somewhere inside its definition.
+- Ord is for types that have an ordering. </br>
+  ```haskell
+  ghci> :t (>)  
+  (>) :: (Ord a) => a -> a -> Bool 
+  ```
+- Ord covers all the standard comparing functions such as >, <, >= and <=. The compare function takes two Ord members of the same type and returns an ordering. Ordering is a type that can be GT, LT or EQ, meaning greater than, lesser than and equal, respectively.
+- Members of Show can be presented as strings. All types covered so far except for functions are a part of Show. The most used function that deals with the Show typeclass is show. It takes a value whose type is a member of Show and presents it to us as a string. </br>
+  ```haskell
+  ghci> show 3  
+  "3"  
+  ghci> show 5.334  
+  "5.334"  
+  ghci> show True  
+  "True" 
+  ```
+- Read is sort of the opposite typeclass of Show. The read function takes a string and returns a type which is a member of Read. </br>
+  ```haskell
+  ghci> read "True" || False  
+  True  
+  ghci> read "8.2" + 3.8  
+  12.0  
+  ghci> read "5" - 2  
+  3  
+  ghci> read "[1,2,3,4]" ++ [3]  
+  [1,2,3,4,3]
+  ghci> read "4"  
+  <interactive>:1:0:  
+      Ambiguous type variable `a' in the constraint:  
+        `Read a' arising from a use of `read' at <interactive>:1:0-7  
+      Probable fix: add a type signature that fixes these type variable(s)  
+  ```
+- It returns a type that's part of Read but if we don't try to use it in some way later, it has no way of knowing which type.
+- If we wan to just read it, then </br>
+  ```haskell
+  ghci> read "5" :: Int  
+  5  
+  ghci> read "5" :: Float  
+  5.0  
+  ghci> (read "5" :: Float) * 4  
+  20.0  
+  ghci> read "[1,2,3,4]" :: [Int]  
+  [1,2,3,4]  
+  ghci> read "(3, 'a')" :: (Int, Char)  
+  (3, 'a')  
+  ```
+- Enum members are sequentially ordered types — they can be enumerated. The main advantage of the Enum typeclass is that we can use its types in list ranges. They also have defined successors and predecesors, which you can get with the succ and pred functions. Types in this class: (), Bool, Char, Ordering, Int, Integer, Float and Double. </br>
+  ```haskell
+  ghci> ['a'..'e']  
+  "abcde"  
+  ghci> [LT .. GT]  
+  [LT,EQ,GT]  
+  ghci> [3 .. 5]  
+  [3,4,5]  
+  ghci> succ 'B'  
+  'C'  
+  ```
+- Num is a numeric typeclass. Its members have the property of being able to act like numbers.
+- Integral is also a numeric typeclass. Num includes all numbers, including real numbers and integral numbers, Integral includes only integral (whole) numbers. In this typeclass are Int and Integer.
+- Floating includes only floating point numbers, so Float and Double.
 
 </br>
 
@@ -302,3 +416,4 @@
 ## References
 - http://learnyouahaskell.com/introduction
 - http://learnyouahaskell.com/starting-out
+- http://learnyouahaskell.com/types-and-typeclasses
