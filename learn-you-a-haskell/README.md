@@ -6,6 +6,7 @@
 ### 1. [Introduction](#content-1)
 ### 2. [Starting Out](#content-2)
 ### 3. [Types and Typeclasses](#content-3)
+### 4. [Syntax in Functions](#content-4)
 
 </br>
 
@@ -413,7 +414,15 @@
 
 ---
 
+## [Syntax in Functions](http://learnyouahaskell.com/syntax-in-functions) <span id="content-4"><span>
+
+
+</br>
+
+---
+
 ## References
 - http://learnyouahaskell.com/introduction
 - http://learnyouahaskell.com/starting-out
 - http://learnyouahaskell.com/types-and-typeclasses
+- http://learnyouahaskell.com/syntax-in-functions
