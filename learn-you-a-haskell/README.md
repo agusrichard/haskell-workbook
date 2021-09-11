@@ -111,6 +111,12 @@
   ```
 - Functions are defined in a similar way that they are called. The function name is followed by parameters seperated by spaces. But when defining functions, there's a = and after that we define what the function does.
 - Functions in Haskell don't have to be in any particular order, so it doesn't matter if you define doubleMe first and then doubleUs or if you do it the other way around.
+- Example:
+  ```haskell
+  doubleSmallNumber x = if x > 100  
+                        then x  
+                        else x*2 
+  ```
 - You're probably familiar with if statements from other languages. The difference between Haskell's if statement and if statements in imperative languages is that the else part is mandatory in Haskell.
 - In imperative languages you can just skip a couple of steps if the condition isn't satisfied but in Haskell every expression and function must return something.
 - Another thing about the if statement in Haskell is that it is an expression.
