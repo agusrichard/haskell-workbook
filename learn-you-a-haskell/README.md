@@ -33,6 +33,8 @@
 - To reload the script, run: `:r`
 - (Author's opinion) The usual workflow for me when playing around in stuff is defining some functions in a .hs file, loading it up and messing around with them and then changing the .hs file, loading it up again and so on. This is also what we'll be doing here.
 
+**[⬆ back to top](#list-of-contents)**
+
 </br>
 
 ---
@@ -301,6 +303,8 @@
   [(1,"apple"),(2,"orange"),(3,"cherry"),(4,"mango")]  
   ```
 
+**[⬆ back to top](#list-of-contents)**
+
 </br>
 
 ---
@@ -416,12 +420,281 @@
 - Integral is also a numeric typeclass. Num includes all numbers, including real numbers and integral numbers, Integral includes only integral (whole) numbers. In this typeclass are Int and Integer.
 - Floating includes only floating point numbers, so Float and Double.
 
+**[⬆ back to top](#list-of-contents)**
+
 </br>
 
 ---
 
 ## [Syntax in Functions](http://learnyouahaskell.com/syntax-in-functions) <span id="content-4"><span>
 
+### Pattern matching
+- Pattern matching consists of specifying patterns to which some data should conform and then checking to see if it does and deconstructing the data according to those patterns.
+- You can pattern match on any data type — numbers, characters, lists, tuples, etc.
+- Example:
+  ```haskell
+  lucky :: (Integral a) => a -> String  
+  lucky 7 = "LUCKY NUMBER SEVEN!"  
+  lucky x = "Sorry, you're out of luck, pal!"   
+  ```
+- When you call lucky, the patterns will be checked from top to bottom and when it conforms to a pattern, the corresponding function body will be used. 
+- This function could have also been implemented by using an if statement. But what if we wanted a function that says the numbers from 1 to 5 and says "Not between 1 and 5" for any other number? Without pattern matching, we'd have to make a pretty convoluted if then else tree. However, with it:
+  ```haskell
+  sayMe :: (Integral a) => a -> String  
+  sayMe 1 = "One!"  
+  sayMe 2 = "Two!"  
+  sayMe 3 = "Three!"  
+  sayMe 4 = "Four!"  
+  sayMe 5 = "Five!"  
+  sayMe x = "Not between 1 and 5"  
+  ```
+- Note that if we moved the last pattern (the catch-all one) to the top, it would always say "Not between 1 and 5", because it would catch all the numbers and they wouldn't have a chance to fall through and be checked for any other patterns.
+- Factorial in recursive definition:
+  ```haskell
+  factorial :: (Integral a) => a -> a  
+  factorial 0 = 1  
+  factorial n = n * factorial (n - 1)
+  ```
+- That's why order is important when specifying patterns and it's always best to specify the most specific ones first and then the more general ones later.
+- Pattern matching failed:
+  ```haskell
+  charName :: Char -> String  
+  charName 'a' = "Albert"  
+  charName 'b' = "Broseph"  
+  charName 'c' = "Cecil"  
+  ```
+- It complains that we have non-exhaustive patterns, and rightfully so. When making patterns, we should always include a catch-all pattern so that our program doesn't crash if we get some unexpected input.
+- Pattern matching in tuples:
+  ```haskell
+  addVectors :: (Num a) => (a, a) -> (a, a) -> (a, a)  
+  addVectors a b = (fst a + fst b, snd a + snd b)  
+  ```
+  ```haskell
+  addVectors :: (Num a) => (a, a) -> (a, a) -> (a, a)  
+  addVectors (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)  
+  ```
+- Some functions for triple:
+  ```haskell
+  first :: (a, b, c) -> a  
+  first (x, _, _) = x  
+    
+  second :: (a, b, c) -> b  
+  second (_, y, _) = y  
+    
+  third :: (a, b, c) -> c  
+  third (_, _, z) = z  
+  ```
+- Tuple pattern matching in list comprehension
+  ```haskell
+  ghci> let xs = [(1,3), (4,3), (2,4), (5,3), (5,6), (3,1)]  
+  ghci> [a+b | (a,b) <- xs]  
+  [4,7,6,8,11,4]   
+  ```
+- The x:xs pattern is used a lot, especially with recursive functions. But patterns that have : in them only match against lists of length 1 or more.
+- head function in a different way:
+  ```haskell
+  head' :: [a] -> a  
+  head' [] = error "Can't call head on an empty list, dummy!"  
+  head' (x:_) = x  
+  ```
+- Fortune teller function:
+  ```haskell
+  tell :: (Show a) => [a] -> String  
+  tell [] = "The list is empty"  
+  tell (x:[]) = "The list has one element: " ++ show x  
+  tell (x:y:[]) = "The list has two elements: " ++ show x ++ " and " ++ show y  
+  tell (x:y:_) = "This list is long. The first two elements are: " ++ show x ++ " and " ++ show y  
+  ```
+- length function in another form:
+  ```haskell
+  length' :: (Num b) => [a] -> b  
+  length' [] = 0  
+  length' (_:xs) = 1 + length' xs  
+  ```
+- sum function:
+  ```haskell
+  sum' :: (Num a) => [a] -> a  
+  sum' [] = 0  
+  sum' (x:xs) = x + sum' xs  
+  ```
+- There's also a thing called as patterns. Those are a handy way of breaking something up according to a pattern and binding it to names whilst still keeping a reference to the whole thing. You do that by putting a name and an @ in front of a pattern. For instance, the pattern xs@(x:y:ys). This pattern will match exactly the same thing as x:y:ys but you can easily get the whole list via xs instead of repeating yourself by typing out x:y:ys in the function body again. Here's a quick and dirty example:
+  ```haskell
+  capital :: String -> String  
+  capital "" = "Empty string, whoops!"  
+  capital all@(x:xs) = "The first letter of " ++ all ++ " is " ++ [x]  
+  ```
+- One more thing — you can't use ++ in pattern matches. If you tried to pattern match against (xs ++ ys), what would be in the first and what would be in the second list? It doesn't make much sense. It would make sense to match stuff against (xs ++ [x,y,z]) or just (xs ++ [x]), but because of the nature of lists, you can't do that.
+
+### Guards, guards!
+- Whereas patterns are a way of making sure a value conforms to some form and deconstructing it, guards are a way of testing whether some property of a value (or several of them) are true or false. That sounds a lot like an if statement and it's very similar. The thing is that guards are a lot more readable when you have several conditions and they play really nicely with patterns.
+- BMI function:
+  ```haskell
+  bmiTell :: (RealFloat a) => a -> String  
+  bmiTell bmi  
+      | bmi <= 18.5 = "You're underweight, you emo, you!"  
+      | bmi <= 25.0 = "You're supposedly normal. Pffft, I bet you're ugly!"  
+      | bmi <= 30.0 = "You're fat! Lose some weight, fatty!"  
+      | otherwise   = "You're a whale, congratulations!"  
+  ```
+- Guards are indicated by pipes that follow a function's name and its parameters. Usually, they're indented a bit to the right and lined up. A guard is basically a boolean expression. If it evaluates to True, then the corresponding function body is used. If it evaluates to False, checking drops through to the next guard and so on.
+- This is very reminiscent of a big if else tree in imperative languages, only this is far better and more readable. While big if else trees are usually frowned upon, sometimes a problem is defined in such a discrete way that you can't get around them. Guards are a very nice alternative for this.
+- Many times, the last guard is otherwise. otherwise is defined simply as otherwise = True and catches everything. This is very similar to patterns, only they check if the input satisfies a pattern but guards check for boolean conditions. If all the guards of a function evaluate to False (and we haven't provided an otherwise catch-all guard), evaluation falls through to the next pattern. That's how patterns and guards play nicely together. If no suitable guards or patterns are found, an error is thrown.
+- Another BMI example:
+  ```haskell
+  bmiTell :: (RealFloat a) => a -> a -> String  
+  bmiTell weight height  
+      | weight / height ^ 2 <= 18.5 = "You're underweight, you emo, you!"  
+      | weight / height ^ 2 <= 25.0 = "You're supposedly normal. Pffft, I bet you're ugly!"  
+      | weight / height ^ 2 <= 30.0 = "You're fat! Lose some weight, fatty!"  
+      | otherwise                 = "You're a whale, congratulations!"  
+  ```
+- Example:
+  ```haskell
+  max' :: (Ord a) => a -> a -> a  
+  max' a b   
+      | a > b     = a  
+      | otherwise = b 
+  ```
+  ```haskell
+  myCompare :: (Ord a) => a -> a -> Ordering  
+  a `myCompare` b  
+      | a > b     = GT  
+      | a == b    = EQ  
+      | otherwise = LT 
+  ```
+
+### Where!?
+- Using where to define bmiTell:
+  ```haskell
+  bmiTell :: (RealFloat a) => a -> a -> String  
+  bmiTell weight height  
+      | bmi <= 18.5 = "You're underweight, you emo, you!"  
+      | bmi <= 25.0 = "You're supposedly normal. Pffft, I bet you're ugly!"  
+      | bmi <= 30.0 = "You're fat! Lose some weight, fatty!"  
+      | otherwise   = "You're a whale, congratulations!"  
+      where bmi = weight / height ^ 2  
+  ```
+  ```haskell
+  bmiTell :: (RealFloat a) => a -> a -> String  
+  bmiTell weight height  
+      | bmi <= skinny = "You're underweight, you emo, you!"  
+      | bmi <= normal = "You're supposedly normal. Pffft, I bet you're ugly!"  
+      | bmi <= fat    = "You're fat! Lose some weight, fatty!"  
+      | otherwise     = "You're a whale, congratulations!"  
+      where bmi = weight / height ^ 2  
+            skinny = 18.5  
+            normal = 25.0  
+            fat = 30.0  
+  ```
+- We put the keyword where after the guards (usually it's best to indent it as much as the pipes are indented) and then we define several names or functions. These names are visible across the guards and give us the advantage of not having to repeat ourselves.
+- The names we define in the where section of a function are only visible to that function, so we don't have to worry about them polluting the namespace of other functions. Notice that all the names are aligned at a single column. If we don't align them nice and proper, Haskell gets confused because then it doesn't know they're all part of the same block.
+- You can also use where bindings to pattern match! We could have rewritten the where section of our previous function as:
+  ```haskell
+  ...  
+  where bmi = weight / height ^ 2  
+        (skinny, normal, fat) = (18.5, 25.0, 30.0) 
+  ```
+- Initials:
+  ```haskell
+  initials :: String -> String -> String  
+  initials firstname lastname = [f] ++ ". " ++ [l] ++ "."  
+      where (f:_) = firstname  
+            (l:_) = lastname   
+  ```
+- Just like we've defined constants in where blocks, you can also define functions. Staying true to our healthy programming theme, let's make a function that takes a list of weight-height pairs and returns a list of BMIs.
+  ```haskell
+  calcBmis :: (RealFloat a) => [(a, a)] -> [a]  
+  calcBmis xs = [bmi w h | (w, h) <- xs]  
+      where bmi weight height = weight / height ^ 2 
+  ```
+- `where` bindings can also be nested. It's a common idiom to make a function and define some helper function in its where clause and then to give those functions helper functions as well, each with its own where clause.
+
+
+### Let it be
+- Very similar to where bindings are let bindings. Where bindings are a syntactic construct that let you bind to variables at the end of a function and the whole function can see them, including all the guards.
+-  Let bindings let you bind to variables anywhere and are expressions themselves, but are very local, so they don't span across guards. Just like any construct in Haskell that is used to bind values to names, let bindings can be used for pattern matching.
+- Example:
+  ```haskell
+  cylinder :: (RealFloat a) => a -> a -> a  
+  cylinder r h = 
+      let sideArea = 2 * pi * r * h  
+          topArea = pi * r ^2  
+      in  sideArea + 2 * topArea  
+  ```
+- The form is let <bindings> in <expression>. The names that you define in the let part are accessible to the expression after the in part.
+- For now it just seems that let puts the bindings first and the expression that uses them later whereas where is the other way around.
+- The difference is that let bindings are expressions themselves. where bindings are just syntactic constructs.
+- Example:
+  ```haskell
+  ghci> [if 5 > 3 then "Woo" else "Boo", if 'a' > 'b' then "Foo" else "Bar"]  
+  ["Woo", "Bar"]  
+  ghci> 4 * (if 10 > 5 then 10 else 0) + 2  
+  42  
+  ```
+  ```haskell
+  ghci> 4 * (let a = 9 in a + 1) + 2  
+  42  
+  ```
+  ```haskell
+  ghci> [let square x = x * x in (square 5, square 3, square 2)]  
+  [(25,9,4)]  
+  ```
+- If we want to bind to several variables inline, we obviously can't align them at columns. That's why we can separate them with semicolons.
+  ```haskell
+  ghci> (let a = 100; b = 200; c = 300 in a*b*c, let foo="Hey "; bar = "there!" in foo ++ bar)  
+  (6000000,"Hey there!")  
+  ```
+  ```haskell
+  ghci> (let (a,b,c) = (1,2,3) in a+b+c) * 100  
+  600  
+  ```
+- You can also put let bindings inside list comprehensions.
+  ```haskell
+  calcBmis :: (RealFloat a) => [(a, a)] -> [a]  
+  calcBmis xs = [bmi | (w, h) <- xs, let bmi = w / h ^ 2]
+
+  calcBmis :: (RealFloat a) => [(a, a)] -> [a]  
+  calcBmis xs = [bmi | (w, h) <- xs, let bmi = w / h ^ 2, bmi >= 25.0]
+  ```
+- We include a let inside a list comprehension much like we would a predicate, only it doesn't filter the list, it only binds to names. The names defined in a let inside a list comprehension are visible to the output function (the part before the |) and all predicates and sections that come after of the binding.
+- We omitted the in part of the let binding when we used them in list comprehensions because the visibility of the names is already predefined there.
+- However, we could use a let in binding in a predicate and the names defined would only be visible to that predicate.
+- If let bindings are so cool, why not use them all the time instead of where bindings, you ask? Well, since let bindings are expressions and are fairly local in their scope, they can't be used across guards. Some people prefer where bindings because the names come after the function they're being used in. That way, the function body is closer to its name and type declaration and to some that's more readable.
+
+### Case expressions
+- Like the name implies, case expressions are, well, expressions, much like if else expressions and let bindings. Not only can we evaluate expressions based on the possible cases of the value of a variable, we can also do pattern matching.
+- First example:
+  ```haskell
+  head' :: [a] -> a  
+  head' xs = case xs of [] -> error "No head for empty lists!"  
+                        (x:_) -> x  
+  ```
+- Syntax:
+  ```haskell
+  case expression of pattern -> result  
+                     pattern -> result  
+                     pattern -> result  
+                     ...  
+  ```
+- `expression` is matched against the patterns. The pattern matching action is the same as expected: the first pattern that matches the expression is used. If it falls through the whole case expression and no suitable pattern is found, a runtime error occurs.
+- Example:
+  ```haskell
+  describeList :: [a] -> String  
+  describeList xs = "The list is " ++ case xs of [] -> "empty."  
+                                                 [x] -> "a singleton list."   
+                                                 xs -> "a longer list." 
+  ```
+- They are useful for pattern matching against something in the middle of an expression. Because pattern matching in function definitions is syntactic sugar for case expressions, we could have also defined this like so:
+  ```haskell
+  describeList :: [a] -> String  
+  describeList xs = "The list is " ++ what xs  
+      where what [] = "empty."  
+            what [x] = "a singleton list."  
+            what xs = "a longer list."  
+  ```
+
+
+**[⬆ back to top](#list-of-contents)**
 
 </br>
 
