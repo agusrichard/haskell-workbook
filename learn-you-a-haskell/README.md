@@ -8,6 +8,7 @@
 ### 3. [Types and Typeclasses](#content-3)
 ### 4. [Syntax in Functions](#content-4)
 ### 5. [Recursion](#content-5)
+### 6. [Higher order functions](#content-6)
 
 </br>
 
@@ -800,6 +801,14 @@
 - When dealing with lists, the edge case is most often the empty list.
 -  If you're dealing with trees, the edge case is usually a node that doesn't have any children.
 
+**[⬆ back to top](#list-of-contents)**
+
+</br>
+
+---
+
+## [Higher order functions](http://learnyouahaskell.com/higher-order-functions) <span id="content-6"><span>
+
 
 **[⬆ back to top](#list-of-contents)**
 
@@ -812,3 +821,4 @@
 - http://learnyouahaskell.com/types-and-typeclasses
 - http://learnyouahaskell.com/syntax-in-functions
 - http://learnyouahaskell.com/recursion
+- http://learnyouahaskell.com/higher-order-functions

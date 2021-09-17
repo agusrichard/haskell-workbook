@@ -56,3 +56,25 @@ myFunction x = if x == 0 then "It's zero" else "I am awesome"
 
 listComprehensionWithLet :: (Integral a) => [a] -> [a]
 listComprehensionWithLet xs = [y `mod` 2 | x <- xs, let y = x * 2]
+
+amIYoung :: Int -> String
+amIYoung x
+  | x <= 0 = "You've not even born yet"
+  | x <= 17 = "I guess you are pretty young"
+  | otherwise = "You are a living dinosaur"
+
+listFuncOne :: [Int] -> [Int]
+listFuncOne [] = error "I dont take empty list"
+listFuncOne xs = [x * z | x <- xs]
+  where
+    z = 10
+
+listFuncTwo :: [Int] -> [Int]
+listFuncTwo [] = error "I dont take empty list"
+listFuncTwo xs = [x * z | x <- xs, let z = 99, x `mod` 2 == 0]
+
+firstSecondSum :: (Real a) => [a] -> a -> a
+firstSecondSum [] _ = 0
+firstSecondSum _ x
+  | x <= 0 = 0
+  | otherwise = x
