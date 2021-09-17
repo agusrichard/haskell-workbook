@@ -7,6 +7,7 @@
 ### 2. [Starting Out](#content-2)
 ### 3. [Types and Typeclasses](#content-3)
 ### 4. [Syntax in Functions](#content-4)
+### 5. [Recursion](#content-5)
 
 </br>
 
@@ -700,8 +701,114 @@
 
 ---
 
+## [Recursion](http://learnyouahaskell.com/recursion) <span id="content-5"><span>
+
+### Hello recursion!
+- Recursion is actually a way of defining functions in which the function is applied inside its own definition.
+- Having an element or two in a recursion definition defined non-recursively (like F(0) and F(1) here) is also called the edge condition and is important if you want your recursive function to terminate. 
+- Recursion is important to Haskell because unlike imperative languages, you do computations in Haskell by declaring what something is instead of declaring how you get it.
+
+### Maximum awesome
+- The maximum function takes a list of things that can be ordered (e.g. instances of the Ord typeclass) and returns the biggest of them.
+- We could first set up an edge condition and say that the maximum of a singleton list is equal to the only element in it.
+- Then we can say that the maximum of a longer list is the head if the head is bigger than the maximum of the tail. If the maximum of the tail is bigger, well, then it's the maximum of the tail.
+- Implementation:
+  ```haskell
+  maximum' :: (Ord a) => [a] -> a  
+  maximum' [] = error "maximum of empty list"  
+  maximum' [x] = x  
+  maximum' (x:xs)   
+      | x > maxTail = x  
+      | otherwise = maxTail  
+      where maxTail = maximum' xs 
+  ```
+- Most imperative languages don't have pattern matching so you have to make a lot of if else statements to test for edge conditions.
+- So the first edge condition says that if the list is empty, crash! Makes sense because what's the maximum of an empty list? I don't know.
+- The second pattern also lays out an edge condition. It says that if it's the singleton list, just give back the only element.
+- Now the third pattern is where the action happens. We use pattern matching to split a list into a head and a tail. This is a very common idiom when doing recursion with lists, so get used to it. We use a where binding to define maxTail as the maximum of the rest of the list. Then we check if the head is greater than the maximum of the rest of the list. If it is, we return the head. Otherwise, we return the maximum of the rest of the list.
+- Using max:
+  ```haskell
+  maximum' :: (Ord a) => [a] -> a  
+  maximum' [] = error "maximum of empty list"  
+  maximum' [x] = x  
+  maximum' (x:xs) = max x (maximum' xs)
+  ```
+
+### A few more recursive functions
+- First off, we'll implement replicate. replicate takes an Int and some element and returns a list that has several repetitions of the same element.
+- For instance, replicate 3 5 returns [5,5,5]. Let's think about the edge condition. My guess is that the edge condition is 0 or less. If we try to replicate something zero times, it should return an empty list. Also for negative numbers, because it doesn't really make sense.
+- Example:
+  ```haskell
+  replicate' :: (Num i, Ord i) => i -> a -> [a]  
+  replicate' n x  
+      | n <= 0    = []  
+      | otherwise = x:replicate' (n-1) x  
+  ```
+- Num is not a subclass of Ord. That means that what constitutes for a number doesn't really have to adhere to an ordering. So that's why we have to specify both the Num and Ord class constraints when doing addition or subtraction and also comparison.
+- Next up, we'll implement take. It takes a certain number of elements from a list. For instance, take 3 [5,4,3,2,1] will return [5,4,3]. If we try to take 0 or less elements from a list, we get an empty list. Also if we try to take anything from an empty list, we get an empty list. Notice that those are two edge conditions right there. So let's write that out:
+  ```haskell
+  take' :: (Num i, Ord i) => i -> [a] -> [a]  
+  take' n _  
+      | n <= 0   = []  
+  take' _ []     = []  
+  take' n (x:xs) = x : take' (n-1) xs  
+  ```
+- The first pattern specifies that if we try to take a 0 or negative number of elements, we get an empty list. Notice that we're using _ to match the list because we don't really care what it is in this case.
+- Also notice that we use a guard, but without an otherwise part. That means that if n turns out to be more than 0, the matching will fall through to the next pattern.
+- The second pattern indicates that if we try to take anything from an empty list, we get an empty list.
+- The third pattern breaks the list into a head and a tail. And then we state that taking n elements from a list equals a list that has x as the head and then a list that takes n-1 elements from the tail as a tail.
+- Reverse example:
+  ```haskell
+  reverse' :: [a] -> [a]  
+  reverse' [] = []  
+  reverse' (x:xs) = reverse' xs ++ [x]
+  ```
+- The good thing about infinite lists though is that we can cut them where we want
+- Zip example:
+  ```haskell
+  zip' :: [a] -> [b] -> [(a,b)]  
+  zip' _ [] = []  
+  zip' [] _ = []  
+  zip' (x:xs) (y:ys) = (x,y):zip' xs ys  
+  ```
+- Elem example:
+  ```haskell
+  elem' :: (Eq a) => a -> [a] -> Bool  
+  elem' a [] = False  
+  elem' a (x:xs)  
+      | a == x    = True  
+      | otherwise = a `elem'` xs   
+  ```
+
+### Quick, sort!
+- So, the type signature is going to be quicksort :: (Ord a) => [a] -> [a]. No surprises there.
+- The edge condition? Empty list, as is expected. A sorted empty list is an empty list.
+- Now here comes the main algorithm: a sorted list is a list that has all the values smaller than (or equal to) the head of the list in front (and those values are sorted), then comes the head of the list in the middle and then come all the values that are bigger than the head (they're also sorted).
+- Quick sort example:
+  ```haskell
+  quicksort :: (Ord a) => [a] -> [a]  
+  quicksort [] = []  
+  quicksort (x:xs) =   
+      let smallerSorted = quicksort [a | a <- xs, a <= x]  
+          biggerSorted = quicksort [a | a <- xs, a > x]  
+      in  smallerSorted ++ [x] ++ biggerSorted  
+  ```
+
+### Thinking recursively
+- We did quite a bit of recursion so far and as you've probably noticed, there's a pattern here. Usually you define an edge case and then you define a function that does something between some element and the function applied to the rest.
+- Of course, these also have edge cases. Usually the edge case is some scenario where a recursive application doesn't make sense.
+- When dealing with lists, the edge case is most often the empty list.
+-  If you're dealing with trees, the edge case is usually a node that doesn't have any children.
+
+
+**[⬆ back to top](#list-of-contents)**
+
+</br>
+
+---
 ## References
 - http://learnyouahaskell.com/introduction
 - http://learnyouahaskell.com/starting-out
 - http://learnyouahaskell.com/types-and-typeclasses
 - http://learnyouahaskell.com/syntax-in-functions
+- http://learnyouahaskell.com/recursion

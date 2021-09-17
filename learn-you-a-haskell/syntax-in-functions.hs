@@ -50,3 +50,9 @@ bmiTell weight height
   | otherwise = "You are a whale!"
   where
     bmi = weight / height ^ 2
+
+myFunction :: Int -> String
+myFunction x = if x == 0 then "It's zero" else "I am awesome"
+
+listComprehensionWithLet :: (Integral a) => [a] -> [a]
+listComprehensionWithLet xs = [y `mod` 2 | x <- xs, let y = x * 2]
