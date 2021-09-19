@@ -809,6 +809,50 @@
 
 ## [Higher order functions](http://learnyouahaskell.com/higher-order-functions) <span id="content-6"><span>
 
+### Introduction
+- Haskell functions can take functions as parameters and return functions as return values. A function that does either of those is called a higher order function.
+
+### Curried functions 
+- Every function in Haskell officially only takes one parameter.
+- ll the functions that accepted several parameters so far have been curried functions.
+- Example of using max:
+  ```haskell
+  ghci> max 4 5  
+  5  
+  ghci> (max 4) 5  
+  5  
+  ```
+- Putting a space between two things is simply function application.
+- The space is sort of like an operator and it has the highest precedence. 
+- Let's examine the type of max. It's max :: (Ord a) => a -> a -> a. That can also be written as max :: (Ord a) => a -> (a -> a). That could be read as: max takes an a and returns (that's the ->) a function that takes an a and returns an a.
+- Simply speaking, if we call a function with too few parameters, we get back a partially applied function, meaning a function that takes as many parameters as we left out.
+- Take a look at this offensively simple function:
+  ```haskell
+  multThree :: (Num a) => a -> a -> a -> a  
+  multThree x y z = x * y * z 
+  ```
+- What really happens when we do multThree 3 5 9 or ((multThree 3) 5) 9? First, 3 is applied to multThree, because they're separated by a space. That creates a function that takes one parameter and returns a function. So then 5 is applied to that, which creates a function that will take a parameter and multiply it by 15. 9 is applied to that function and the result is 135 or something.
+- The thing before the -> is the parameter that a function takes and the thing after it is what it returns.
+- Example:
+  ```haskell
+  ghci> let multTwoWithNine = multThree 9  
+  ghci> multTwoWithNine 2 3  
+  54  
+  ghci> let multWithEighteen = multTwoWithNine 2  
+  ghci> multWithEighteen 10  
+  180
+  ```
+- By calling functions with too few parameters, so to speak, we're creating new functions on the fly.
+- What if we wanted to create a function that takes a number and compares it to 100? We could do something like this:
+  ```haskell
+  compareWithHundred :: (Num a, Ord a) => a -> Ordering  
+  compareWithHundred x = compare 100 x  
+  ```
+  ```haskell
+  compareWithHundred :: (Num a, Ord a) => a -> Ordering  
+  compareWithHundred = compare 100 
+  ```
+
 
 **[⬆ back to top](#list-of-contents)**
 
