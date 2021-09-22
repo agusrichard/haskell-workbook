@@ -850,8 +850,95 @@
   ```
   ```haskell
   compareWithHundred :: (Num a, Ord a) => a -> Ordering  
-  compareWithHundred = compare 100 
+  compareWithHundred = compare 100
   ```
+- Infix functions can also be partially applied by using sections. To section an infix function, simply surround it with parentheses and only supply a parameter on one side.
+  ```haskell
+  divideByTen :: (Floating a) => a -> a  
+  divideByTen = (/10) 
+  ```
+- Calling, say, divideByTen 200 is equivalent to doing 200 / 10, as is doing (/10) 200.
+- Example:
+  ```haskell
+  isUpperAlphanum :: Char -> Bool  
+  isUpperAlphanum = (`elem` ['A'..'Z']) 
+  ```
+- Remeber that multThree is a function that takes three argument. What happens if we just provide it with only 2 arguments?
+  ```haskell
+  ghci> multThree 3 4  
+  <interactive>:1:0:  
+      No instance for (Show (t -> t))  
+        arising from a use of `print' at <interactive>:1:0-12  
+      Possible fix: add an instance declaration for (Show (t -> t))  
+      In the expression: print it  
+      In a 'do' expression: print it
+  ```
+- GHCI don't know how to print the partially applied function.
+
+### Some higher-orderism is in order
+- Functions can take functions as parameters and also return functions.
+  ```haskell
+  applyTwice :: (a -> a) -> a -> a  
+  applyTwice f x = f (f x) 
+  ```
+- First of all, notice the type declaration. Before, we didn't need parentheses because -> is naturally right-associative. However, here, they're mandatory.
+- They indicate that the first parameter is a function that takes something and returns that same thing. The second parameter is something of that type also and the return value is also of the same type.
+- The first parameter is a function (of type a -> a) and the second is that same a. The function can also be Int -> Int or String -> String or whatever. But then, the second parameter to also has to be of that type.
+- The body of the function is pretty simple. We just use the parameter f as a function, applying x to it by separating them with a space and then applying the result to f again. Anyway, playing around with the function:
+  ```haskell
+  ghci> applyTwice (+3) 10  
+  16  
+  ghci> applyTwice (++ " HAHA") "HEY"  
+  "HEY HAHA HAHA"  
+  ghci> applyTwice ("HAHA " ++) "HEY"  
+  "HAHA HAHA HEY"  
+  ghci> applyTwice (multThree 2 2) 9  
+  144  
+  ghci> applyTwice (3:) [1]  
+  [3,3,1]  
+  ```
+- Example of zipWith':
+  ```haskell
+  zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]  
+  zipWith' _ [] _ = []  
+  zipWith' _ _ [] = []  
+  zipWith' f (x:xs) (y:ys) = f x y : zipWith' f xs ys  
+  ```
+- The first parameter is a function that takes two things and produces a third thing. 
+- The second and third parameter are lists. The result is also a list. The first has to be a list of a's, because the joining function takes a's as its first argument. The second has to be a list of b's, because the second parameter of the joining function is of type b. The result is a list of c's.
+- What zipWith could do:
+  ```haskell
+  ghci> zipWith' (+) [4,2,5,6] [2,6,2,3]  
+  [6,8,7,9]  
+  ghci> zipWith' max [6,3,2,1] [7,3,1,5]  
+  [7,3,2,5]  
+  ghci> zipWith' (++) ["foo ", "bar ", "baz "] ["fighters", "hoppers", "aldrin"]  
+  ["foo fighters","bar hoppers","baz aldrin"]  
+  ghci> zipWith' (*) (replicate 5 2) [1..]  
+  [2,4,6,8,10]  
+  ghci> zipWith' (zipWith' (*)) [[1,2,3],[3,5,6],[2,3,4]] [[3,2,2],[3,4,5],[5,4,3]]  
+  [[3,4,6],[9,20,30],[10,12,12]]  
+  ```
+- We'll implement another function that's already in the standard library, called flip. Flip simply takes a function and returns a function that is like our original function, only the first two arguments are flipped. We can implement it like so:
+  ```haskell
+  flip' :: (a -> b -> c) -> (b -> a -> c)  
+  flip' f = g  
+      where g x y = f y x 
+  ```
+- Reading the type declaration, we say that it takes a function that takes an a and a b and returns a function that takes a b and an a. But because functions are curried by default, the second pair of parentheses is really unnecessary, because -> is right associative by default. (a -> b -> c) -> (b -> a -> c) is the same as (a -> b -> c) -> (b -> (a -> c)),
+- Another way to define flip:
+  ```haskell
+  flip' :: (a -> b -> c) -> b -> a -> c  
+  flip' f y x = f x y
+  ```
+- Usage's example:
+  ```haskell
+  ghci> flip' zip [1,2,3,4,5] "hello"  
+  [('h',1),('e',2),('l',3),('l',4),('o',5)]  
+  ghci> zipWith (flip' div) [2,2..] [10,8,6,4,2]  
+  [5,4,3,2,1]  
+  ```
+
 
 
 **[⬆ back to top](#list-of-contents)**
