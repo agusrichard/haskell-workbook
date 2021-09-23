@@ -939,6 +939,225 @@
   [5,4,3,2,1]  
   ```
 
+### Maps and filters
+- map takes a function and a list and applies that function to every element in the list, producing a new list.
+  ```haskell
+  map :: (a -> b) -> [a] -> [b]  
+  map _ [] = []  
+  map f (x:xs) = f x : map f xs  
+  ```
+- However, using map is much more readable for cases where you only apply some function to the elements of a list, especially once you're dealing with maps of maps and then the whole thing with a lot of brackets can get a bit messy.
+- filter is a function that takes a predicate (a predicate is a function that tells whether something is true or not.
+  ```haskell
+  filter :: (a -> Bool) -> [a] -> [a]  
+  filter _ [] = []  
+  filter p (x:xs)   
+      | p x       = x : filter p xs  
+      | otherwise = filter p xs  
+  ```
+  ```haskell
+  ghci> filter (>3) [1,5,3,2,1,6,4,3,2,1]  
+  [5,6,4]  
+  ghci> filter (==3) [1,2,3,4,5]  
+  [3]  
+  ghci> filter even [1..10]  
+  [2,4,6,8,10]  
+  ghci> let notNull x = not (null x) in filter notNull [[1,2,3],[],[3,4,5],[2,2],[],[],[]]  
+  [[1,2,3],[3,4,5],[2,2]]  
+  ghci> filter (`elem` ['a'..'z']) "u LaUgH aT mE BeCaUsE I aM diFfeRent"  
+  "uagameasadifeent"  
+  ghci> filter (`elem` ['A'..'Z']) "i lauGh At You BecAuse u r aLL the Same"  
+  "GAYBALLS"  
+  ```
+- quicksort using filter:
+  ```haskell
+  quicksort :: (Ord a) => [a] -> [a]    
+  quicksort [] = []    
+  quicksort (x:xs) =     
+      let smallerSorted = quicksort (filter (<=x) xs)  
+          biggerSorted = quicksort (filter (>x) xs)   
+      in  smallerSorted ++ [x] ++ biggerSorted  
+  ```
+- Thanks to Haskell's laziness, even if you map something over a list several times and filter it several times, it will only pass over the list once.
+- Let's find the largest number under 100,000 that's divisible by 3829. To do that, we'll just filter a set of possibilities in which we know the solution lies.
+  ```haskell
+  largestDivisible :: (Integral a) => a  
+  largestDivisible = head (filter p [100000,99999..])  
+      where p x = x `mod` 3829 == 0  
+  ```
+- Example:
+  ```haskell
+  ghci> sum (takeWhile (<10000) (filter odd (map (^2) [1..])))  
+  166650
+  ghci> sum (takeWhile (<10000) [n^2 | n <- [1..], odd (n^2)])  
+  166650 
+  ```
+- Haskell's property of laziness is what makes this possible. We can map over and filter an infinite list, because it won't actually map and filter it right away, it'll delay those actions.
+- Only when we force Haskell to show us the sum does the sum function say to the takeWhile that it needs those numbers.
+- takeWhile forces the filtering and mapping to occur, but only until a number greater than or equal to 10,000 is encountered.
+- Collatz conjecture chain:
+  ```haskell
+  chain :: (Integral a) => a -> [a]  
+  chain 1 = [1]  
+  chain n  
+      | even n =  n:chain (n `div` 2)  
+      | odd n  =  n:chain (n*3 + 1)  
+  ```
+- Partially applied functions that returns a list of functions:
+  ```haskell
+  ghci> let listOfFuns = map (*) [0..]  
+  ghci> (listOfFuns !! 4) 5  
+  20  
+  ```
+
+### Lambdas
+- Lambdas are basically anonymous functions that are used because we need some functions only once
+-  Normally, we make a lambda with the sole purpose of passing it to a higher-order function. To make a lambda, we write a \ (because it kind of looks like the greek letter lambda if you squint hard enough) and then we write the parameters, separated by spaces.
+- After that comes a -> and then the function body. We usually surround them by parentheses, because otherwise they extend all the way to the right.
+- Example:
+  ```haskell
+  numLongChains :: Int  
+  numLongChains = length (filter (\xs -> length xs > 15) (map chain [1..100]))  
+  ```
+- Lambdas are expressions, that's why we can just pass them like that. The expression (\xs -> length xs > 15) returns a function that tells us whether the length of the list passed to it is greater than 15.
+- For instance, the expressions map (+3) [1,6,3,2] and map (\x -> x + 3) [1,6,3,2] are equivalent since both (+3) and (\x -> x + 3) are functions that take a number and add 3 to it.
+- Example:
+  ```haskell
+  ghci> zipWith (\a b -> (a * 30 + 3) / b) [5,4,3,2,1] [1,2,3,4,5]  
+  [153.0,61.5,31.0,15.75,6.6]  
+  ```
+- And like normal functions, you can pattern match in lambdas. The only difference is that you can't define several patterns for one parameter, like making a [] and a (x:xs) pattern for the same parameter and then having values fall through. If a pattern matching fails in a lambda, a runtime error occurs, so be careful when pattern matching in lambdas!
+- These two are equivalent:
+  ```haskell
+  addThree :: (Num a) => a -> a -> a -> a  
+  addThree x y z = x + y + z 
+  ```
+  ```haskell
+  addThree :: (Num a) => a -> a -> a -> a  
+  addThree = \x -> \y -> \z -> x + y + z  
+  ```
+- `flip` function using lambdas:
+  ```haskell
+  flip' :: (a -> b -> c) -> b -> a -> c  
+  flip' f = \x y -> f y x  
+  ```
+
+### Only folds and horses
+- Back when we were dealing with recursion, we noticed a theme throughout many of the recursive functions that operated on lists.
+- Usually, we'd have an edge case for the empty list. We'd introduce the x:xs pattern and then we'd do some action that involves a single element and the rest of the list.
+- It turns out this is a very common pattern, so a couple of very useful functions were introduced to encapsulate it. These functions are called `folds`.
+- A fold takes a binary function, a starting value (I like to call it the accumulator) and a list to fold up. 
+- The binary function itself takes two parameters. The binary function is called with the accumulator and the first (or last) element and produces a new accumulator.
+- Then, the binary function is called again with the new accumulator and the now new first (or last) element, and so on. Once we've walked over the whole list, only the accumulator remains, which is what we've reduced the list to.
+- First let's take a look at the foldl function, also called the left fold. It folds the list up from the left side. The binary function is applied between the starting value and the head of the list. That produces a new accumulator value and the binary function is called with that value and the next element, etc.
+  ```haskell
+  sum' :: (Num a) => [a] -> a  
+  sum' xs = foldl (\acc x -> acc + x) 0 xs  
+  sum' :: (Num a) => [a] -> a  
+  sum' = foldl (+) 0  
+  ```
+- Generally, if you have a function like foo a = bar b a, you can rewrite it as foo = bar b, because of currying.
+- Elem with foldl:
+  ```haskell
+  elem' :: (Eq a) => a -> [a] -> Bool  
+  elem' y ys = foldl (\acc x -> if x == y then True else acc) False ys  
+  ```
+- The right fold, foldr works in a similar way to the left fold, only the accumulator eats up the values from the right. Also, the left fold's binary function has the accumulator as the first parameter and the current value as the second one (so \acc x -> ...), the right fold's binary function has the current value as the first parameter and the accumulator as the second one (so \x acc -> ...). It kind of makes sense that the right fold has the accumulator on the right, because it folds from the right side.
+- `map` function using right fold:
+  ```haskell
+  map' :: (a -> b) -> [a] -> [b]  
+  map' f xs = foldr (\x acc -> f x : acc) [] xs  
+  ```
+- Of course, we could have implemented this function with a left fold too. It would be map' f xs = foldl (\acc x -> acc ++ [f x]) [] xs, but the thing is that the ++ function is much more expensive than :, so we usually use right folds when we're building up new lists from a list.
+- One big difference is that right folds work on infinite lists, whereas left ones don't! To put it plainly, if you take an infinite list at some point and you fold it up from the right, you'll eventually reach the beginning of the list. However, if you take an infinite list at a point and you try to fold it up from the left, you'll never reach an end!
+- Folds can be used to implement any function where you traverse a list once, element by element, and then return something based on that. Whenever you want to traverse a list to return something, chances are you want a fold. That's why folds are, along with maps and filters, one of the most useful types of functions in functional programming.
+- Standard library functions defined using folds:
+  ```haskell
+  maximum' :: (Ord a) => [a] -> a  
+  maximum' = foldr1 (\x acc -> if x > acc then x else acc)  
+    
+  reverse' :: [a] -> [a]  
+  reverse' = foldl (\acc x -> x : acc) []  
+    
+  product' :: (Num a) => [a] -> a  
+  product' = foldr1 (*)  
+    
+  filter' :: (a -> Bool) -> [a] -> [a]  
+  filter' p = foldr (\x acc -> if p x then x : acc else acc) []  
+    
+  head' :: [a] -> a  
+  head' = foldr1 (\x _ -> x)  
+    
+  last' :: [a] -> a  
+  last' = foldl1 (\_ x -> x)  
+  ```
+- That's why we could have also written our reverse as `foldl (flip (:)) []`.
+- Another way to picture right and left folds is like this: say we have a right fold and the binary function is f and the starting value is z. If we're right folding over the list [3,4,5,6], we're essentially doing this: f 3 (f 4 (f 5 (f 6 z))). f is called with the last element in the list and the accumulator, that value is given as the accumulator to the next to last value and so on. If we take f to be + and the starting accumulator value to be 0, that's 3 + (4 + (5 + (6 + 0))). Or if we write + as a prefix function, that's (+) 3 ((+) 4 ((+) 5 ((+) 6 0))). 
+- Similarly, doing a left fold over that list with g as the binary function and z as the accumulator is the equivalent of g (g (g (g z 3) 4) 5) 6. If we use flip (:) as the binary function and [] as the accumulator (so we're reversing the list), then that's the equivalent of flip (:) (flip (:) (flip (:) (flip (:) [] 3) 4) 5) 6. And sure enough, if you evaluate that expression, you get [6,5,4,3]
+- scanl and scanr are like foldl and foldr, only they report all the intermediate accumulator states in the form of a list. There are also scanl1 and scanr1, which are analogous to foldl1 and foldr1.
+- When using a scanl, the final result will be in the last element of the resulting list while a scanr will place the result in the head.
+- Let's answer us this question: How many elements does it take for the sum of the roots of all natural numbers to exceed 1000?
+- To get the squares of all natural numbers, we just do map sqrt [1..]. Now, to get the sum, we could do a fold, but because we're interested in how the sum progresses, we're going to do a scan. Once we've done the scan, we just see how many sums are under 1000. The first sum in the scanlist will be 1, normally. The second will be 1 plus the square root of 2. The third will be that plus the square root of 3. If there are X sums under 1000, then it takes X+1 elements for the sum to exceed 1000.
+  ```haskell
+  sqrtSums :: Int  
+  sqrtSums = length (takeWhile (<1000) (scanl1 (+) (map sqrt [1..]))) + 1
+  ```
+
+### Function application with $
+- Alright, next up, we'll take a look at the $ function, also called function application. First of all, let's check out how it's defined:
+  ```haskell
+  ($) :: (a -> b) -> a -> b  
+  f $ x = f x 
+  ```
+- Whereas normal function application (putting a space between two things) has a really high precedence, the $ function has the lowest precedence.
+- Function application with a space is left-associative (so f a b c is the same as ((f a) b) c)), function application with $ is right-associative.
+- That's all very well, but how does this help us? Most of the time, it's a convenience function so that we don't have to write so many parentheses. Consider the expression sum (map sqrt [1..130]). Because $ has such a low precedence, we can rewrite that expression as sum $ map sqrt [1..130], saving ourselves precious keystrokes!
+- When a $ is encountered, the expression on its right is applied as the parameter to the function on its left. 
+- How about sqrt 3 + 4 + 9? This adds together 9, 4 and the square root of 3.
+- If we want get the square root of 3 + 4 + 9, we'd have to write sqrt (3 + 4 + 9) or if we use $ we can write it as sqrt $ 3 + 4 + 9 because $ has the lowest precedence of any operator. That's why you can imagine a $ being sort of the equivalent of writing an opening parentheses and then writing a closing one on the far right side of the expression.
+- How about `sum (filter (> 10) (map (*2) [2..10]))`? Well, because `$` is right-associative, `f (g (z x))` is equal to `f $ g $ z x`. And so, we can rewrite `sum (filter (> 10) (map (*2) [2..10]))` as` sum $ filter (> 10) $ map (*2) [2..10]`.
+
+### Function composition
+- In mathematics, function composition is defined like this:  (f . g)(x) = f(g(x)), meaning that composing two functions produces a new function that, when called with a parameter, say, x is the equivalent of calling g with the parameter x and then calling the f with that result.
+- In Haskell, function composition is pretty much the same thing. We do function composition with the . function, which is defined like so:
+  ```haskell
+  (.) :: (b -> c) -> (a -> b) -> a -> c  
+  f . g = \x -> f (g x)  
+  ```
+- Mind the type declaration. f must take as its parameter a value that has the same type as g's return value. So the resulting function takes a parameter of the same type that g takes and returns a value of the same type that f returns. The expression negate . (* 3) returns a function that takes a number, multiplies it by 3 and then negates it.
+- Example:
+  ```haskell
+  ghci> map (\x -> negate (abs x)) [5,-3,-6,7,-3,2,-19,24]  
+  [-5,-3,-6,-7,-3,-2,-19,-24]
+
+  ghci> map (negate . abs) [5,-3,-6,7,-3,2,-19,24]  
+  [-5,-3,-6,-7,-3,-2,-19,-24]  
+
+  ghci> map (\xs -> negate (sum (tail xs))) [[1..5],[3..6],[1..7]]  
+  [-14,-15,-27]  
+
+  ghci> map (negate . sum . tail) [[1..5],[3..6],[1..7]]  
+  [-14,-15,-27]  
+
+  sum' :: (Num a) => [a] -> a     
+  sum' xs = foldl (+) 0 xs 
+
+  fn x = ceiling (negate (tan (cos (max 50 x)))) 
+
+  fn = ceiling . negate . tan . cos . max 50  
+
+  oddSquareSum :: Integer  
+  oddSquareSum = sum (takeWhile (<10000) (filter odd (map (^2) [1..])))   
+
+  oddSquareSum :: Integer  
+  oddSquareSum = sum . takeWhile (<10000) . filter odd . map (^2) $ [1..] 
+
+  oddSquareSum :: Integer  
+  oddSquareSum =   
+      let oddSquares = filter odd $ map (^2) [1..]  
+          belowLimit = takeWhile (<10000) oddSquares  
+      in  sum belowLimit 
+  ```
 
 
 **[⬆ back to top](#list-of-contents)**
