@@ -9,6 +9,7 @@
 ### 4. [Syntax in Functions](#content-4)
 ### 5. [Recursion](#content-5)
 ### 6. [Higher order functions](#content-6)
+### 7. [Modules](#content-7)
 
 </br>
 
@@ -1165,6 +1166,57 @@
 </br>
 
 ---
+
+## [Modules](http://learnyouahaskell.com/modules) <span id="content-7"><span>
+
+### Loading modules
+- A Haskell module is a collection of related functions, types and typeclasses.
+- A Haskell program is a collection of modules where the main module loads up the other modules and then uses the functions defined in them to do something.
+- The Haskell standard library is split into modules, each of them contains functions and types that are somehow related and serve some common purpose.
+- All the functions, types and typeclasses that we've dealt with so far were part of the Prelude module, which is imported by default.
+- The syntax for importing modules in a Haskell script is `import <module name>`.
+- Example:
+  ```haskell
+  import Data.List  
+  
+  numUniques :: (Eq a) => [a] -> Int  
+  numUniques = length . nub  
+  ```
+- When you do `import Data.List`, all the functions that `Data.List` exports become available in the global namespace, meaning that you can call them from wherever in the script.
+- `nub` is a function defined in `Data.List` that takes a list and weeds out duplicate elements.
+- Composing length and `nub` by doing `length` . `nub` produces a function that's the equivalent of `\xs -> length (nub xs)`.
+- Import the modules to global namespeces in ghci:
+  ```haskell
+  ghci> :m + Data.List 
+
+  ghci> :m + Data.List Data.Map Data.Set  
+  ```
+- If you just need a couple of functions from a module, you can selectively import just those functions. If we wanted to import only the nub and sort functions from Data.List, we'd do this:
+  ```haskell
+  import Data.List (nub, sort)  
+  ```
+- Import all except nub functions:
+  ```haskell
+  import Data.List hiding (nub) 
+  ```
+- Qualified import for avoid namespace clashes:
+  ```haskell
+  import qualified Data.Map  
+  ```
+- This makes it so that if we want to reference Data.Map's filter function, we have to do Data.Map.filter, whereas just filter still refers to the normal filter we all know and love.
+- Rename import reference:
+  ```haskell
+  import qualified Data.Map as M 
+  ```
+- Use [his handy reference](http://www.haskell.org/ghc/docs/latest/html/libraries/) to see which modules are in the standard library.
+- To search for functions or to find out where they're located, use [Hoogle](https://hoogle.haskell.org/). It's a really awesome Haskell search engine, you can search by name, module name or even type signature.
+  
+
+**[⬆ back to top](#list-of-contents)**
+
+</br>
+
+---
 ## References
 - http://learnyouahaskell.com/introduction
 - http://learnyouahaskell.com/starting-out
@@ -1172,3 +1224,4 @@
 - http://learnyouahaskell.com/syntax-in-functions
 - http://learnyouahaskell.com/recursion
 - http://learnyouahaskell.com/higher-order-functions
+- http://learnyouahaskell.com/modules
