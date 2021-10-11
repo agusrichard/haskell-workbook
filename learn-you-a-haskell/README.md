@@ -1210,6 +1210,123 @@
   ```
 - Use [his handy reference](http://www.haskell.org/ghc/docs/latest/html/libraries/) to see which modules are in the standard library.
 - To search for functions or to find out where they're located, use [Hoogle](https://hoogle.haskell.org/). It's a really awesome Haskell search engine, you can search by name, module name or even type signature.
+
+
+### Making our own modules
+- Let's see how we can make our own modules by making a little module that provides some functions for calculating the volume and area of a few geometrical objects.
+- We'll start by creating a file called Geometry.hs.
+- We say that a module exports functions. What that means is that when I import a module, I can use the functions that it exports.
+- It can define functions that its functions call internally, but we can only see and use the ones that it exports.
+- At the beginning of a module, we specify the module name. If we have a file called Geometry.hs, then we should name our module Geometry.
+- Then, we specify the functions that it exports and after that, we can start writing the functions. So we'll start with this.
+- Example:
+  ```haskell
+  module Geometry  
+  ( sphereVolume  
+  , sphereArea  
+  , cubeVolume  
+  , cubeArea  
+  , cuboidArea  
+  , cuboidVolume  
+  ) where 
+  ```
+  ```haskell
+  module Geometry  
+  ( sphereVolume  
+  , sphereArea  
+  , cubeVolume  
+  , cubeArea  
+  , cuboidArea  
+  , cuboidVolume  
+  ) where  
+    
+  sphereVolume :: Float -> Float  
+  sphereVolume radius = (4.0 / 3.0) * pi * (radius ^ 3)  
+    
+  sphereArea :: Float -> Float  
+  sphereArea radius = 4 * pi * (radius ^ 2)  
+    
+  cubeVolume :: Float -> Float  
+  cubeVolume side = cuboidVolume side side side  
+    
+  cubeArea :: Float -> Float  
+  cubeArea side = cuboidArea side side side  
+    
+  cuboidVolume :: Float -> Float -> Float -> Float  
+  cuboidVolume a b c = rectangleArea a b * c  
+    
+  cuboidArea :: Float -> Float -> Float -> Float  
+  cuboidArea a b c = rectangleArea a b * 2 + rectangleArea a c * 2 + rectangleArea c b * 2  
+    
+  rectangleArea :: Float -> Float -> Float  
+  rectangleArea a b = a * b  
+  ```
+- When making a module, we usually export only those functions that act as a sort of interface to our module so that the implementation is hidden.
+- If someone is using our Geometry module, they don't have to concern themselves with functions that we don't export.
+- If someone is using our Geometry module, they don't have to concern themselves with functions that we don't export.
+- To use our module, we just do:
+  ```haskell
+  import Geometry  
+  ```
+- Let's section these functions off so that Geometry is a module that has three sub-modules, one for each type of object.
+- First, we'll make a folder called Geometry. Mind the capital G. In it, we'll place three files: Sphere.hs, Cuboid.hs, and Cube.hs. Here's what the files will contain:
+- `Sphere.hs`:
+  ```haskell
+  module Geometry.Sphere  
+  ( volume  
+  , area  
+  ) where  
+    
+  volume :: Float -> Float  
+  volume radius = (4.0 / 3.0) * pi * (radius ^ 3)  
+    
+  area :: Float -> Float  
+  area radius = 4 * pi * (radius ^ 2) 
+  ```
+- `Cuboid.hs`:
+  ```haskell
+  module Geometry.Cuboid  
+  ( volume  
+  , area  
+  ) where  
+    
+  volume :: Float -> Float -> Float -> Float  
+  volume a b c = rectangleArea a b * c  
+    
+  area :: Float -> Float -> Float -> Float  
+  area a b c = rectangleArea a b * 2 + rectangleArea a c * 2 + rectangleArea c b * 2  
+    
+  rectangleArea :: Float -> Float -> Float  
+  rectangleArea a b = a * b  
+  ```
+- `Cube.hs`:
+  ```haskell
+  module Geometry.Cube  
+  ( volume  
+  , area  
+  ) where  
+    
+  import qualified Geometry.Cuboid as Cuboid  
+    
+  volume :: Float -> Float  
+  volume side = Cuboid.volume side side side  
+    
+  area :: Float -> Float  
+  area side = Cuboid.area side side side 
+  ```
+- So first is Geometry.Sphere. Notice how we placed it in a folder called Geometry and then defined the module name as Geometry.Sphere.
+- So now if we're in a file that's on the same level as the Geometry folder, we can do, say:
+  ```haskell
+  import Geometry.Sphere  
+  ```
+- And if we want to juggle two or more of these modules, we have to do qualified imports because they export functions with the same names. So we just do something like:
+  ```haskell
+  import qualified Geometry.Sphere as Sphere  
+  import qualified Geometry.Cuboid as Cuboid  
+  import qualified Geometry.Cube as Cube 
+  ```
+- And then we can call Sphere.area, Sphere.volume, Cuboid.area, etc. and each will calculate the area or volume for their corresponding object.
+
   
 
 **[⬆ back to top](#list-of-contents)**

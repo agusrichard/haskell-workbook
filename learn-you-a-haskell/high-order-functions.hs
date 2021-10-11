@@ -71,3 +71,7 @@ numLongChains :: Int
 numLongChains = length (filter isLong (map chain [1 .. 100]))
   where
     isLong xs = length xs > 15
+
+-- I know this is redundant, but I am learning here
+plusTwo :: (Real a) => [a] -> [a]
+plusTwo = \xs -> [x + 2 | x <- xs]
