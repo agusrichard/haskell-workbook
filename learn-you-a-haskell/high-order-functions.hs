@@ -75,3 +75,5 @@ numLongChains = length (filter isLong (map chain [1 .. 100]))
 -- I know this is redundant, but I am learning here
 plusTwo :: (Real a) => [a] -> [a]
 plusTwo = \xs -> [x + 2 | x <- xs]
+
+zipWithPowerMult = zipWith' (\x y -> x ^ y + x * y)

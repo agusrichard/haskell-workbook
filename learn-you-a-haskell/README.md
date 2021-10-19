@@ -10,6 +10,7 @@
 ### 5. [Recursion](#content-5)
 ### 6. [Higher order functions](#content-6)
 ### 7. [Modules](#content-7)
+### 8. [Making Our Own Types and Typeclasses](#content-8)
 
 </br>
 
@@ -1328,12 +1329,200 @@
 - And then we can call Sphere.area, Sphere.volume, Cuboid.area, etc. and each will calculate the area or volume for their corresponding object.
 
   
-
 **[⬆ back to top](#list-of-contents)**
 
 </br>
 
 ---
+
+## [Making Our Own Types and Typeclasses](http://learnyouahaskell.com/making-our-own-types-and-typeclasses) <span id="content-8"><span>
+
+### Algebraic data types intro
+- So far, we've run into a lot of data types. Bool, Int, Char, Maybe, etc. But how do we make our own? Well, one way is to use the data keyword to define a type.
+- Let's see how the Bool type is defined in the standard library.
+  ```haskell
+  data Bool = False | True  
+  ```
+- data means that we're defining a new data type. The part before the = denotes the type, which is Bool. The parts after the = are value constructors.
+- They specify the different values that this type can have. The | is read as or. So we can read this as: the Bool type can have a value of True or False. Both the type name and the value constructors have to be capital cased.
+- In a similar fashion, we can think of the Int type as being defined like this:
+  ```haskell
+  data Int = -2147483648 | -2147483647 | ... | -1 | 0 | 1 | 2 | ... | 2147483647 
+  ```
+- Now, let's think about how we would represent a shape in Haskell. One way would be to use tuples. A circle could be denoted as (43.1, 55.0, 10.4) where the first and second fields are the coordinates of the circle's center and the third field is the radius.
+- Sounds OK, but those could also represent a 3D vector or anything else. A better solution would be to make our own type to represent a shape. Let's say that a shape can be a circle or a rectangle.
+- Now what's this? Think of it like this. The Circle value constructor has three fields, which take floats. So when we write a value constructor, we can optionally add some types after it and those types define the values it will contain. Here, the first two fields are the coordinates of its center, the third one its radius.
+- The Rectangle value constructor has four fields which accept floats. The first two are the coordinates to its upper left corner and the second two are coordinates to its lower right one.
+- Now when I say fields, I actually mean parameters. Value constructors are actually functions that ultimately return a value of a data type.
+- Let's take a look at the type signatures for these two value constructors.
+  ```haskell
+  ghci> :t Circle  
+  Circle :: Float -> Float -> Float -> Shape  
+  ghci> :t Rectangle  
+  Rectangle :: Float -> Float -> Float -> Float -> Shape  
+  ```
+- Make a function that takes shape and return its surface:
+  ```haskell
+  surface :: Shape -> Float  
+  surface (Circle _ _ r) = pi * r ^ 2  
+  surface (Rectangle x1 y1 x2 y2) = (abs $ x2 - x1) * (abs $ y2 - y1)  
+  ```
+- The first notable thing here is the type declaration. It says that the function takes a shape and returns a float.
+- We couldn't write a type declaration of Circle -> Float because Circle is not a type, Shape is. Just like we can't write a function with a type declaration of True -> Int.
+- The next thing we notice here is that we can pattern match against constructors. We pattern matched against constructors before (all the time actually) when we pattern matched against values like [] or False or 5,
+- We just write a constructor and then bind its fields to names.
+  ```haskell
+  ghci> surface $ Circle 10 20 10  
+  314.15927  
+  ghci> surface $ Rectangle 0 0 100 100  
+  10000.0 
+  ```
+- Yay, it works! But if we try to just print out Circle 10 20 5 in the prompt, we'll get an error. That's because Haskell doesn't know how to display our data type as a string (yet). Remember, when we try to print a value out in the prompt, Haskell first runs the show function to get the string representation of our value and then it prints that out to the terminal.
+- To make our Shape type part of the Show typeclass, we modify it like this:
+  ```haskell
+  data Shape = Circle Float Float Float | Rectangle Float Float Float Float deriving (Show) 
+  ```
+- We won't concern ourselves with deriving too much for now. Let's just say that if we add deriving (Show) at the end of a data declaration, Haskell automagically makes that type part of the Show typeclass.
+  ```haskell
+  ghci> Circle 10 20 5  
+  Circle 10.0 20.0 5.0  
+  ghci> Rectangle 50 230 60 90  
+  Rectangle 50.0 230.0 60.0 90.0 
+  ```
+- Value constructors are functions, so we can map them and partially apply them and everything. If we want a list of concentric circles with different radii, we can do this.
+  ```haskell
+  ghci> map (Circle 10 20) [4,5,6,6]  
+  [Circle 10.0 20.0 4.0,Circle 10.0 20.0 5.0,Circle 10.0 20.0 6.0,Circle 10.0 20.0 6.0]  
+  ```
+- Our data type is good, although it could be better. Let's make an intermediate data type that defines a point in two-dimensional space. Then we can use that to make our shapes more understandable.
+  ```haskell
+  data Point = Point Float Float deriving (Show)  
+  data Shape = Circle Point Float | Rectangle Point Point deriving (Show) 
+  ```
+- Notice that when defining a point, we used the same name for the data type and the value constructor. This has no special meaning, although it's common to use the same name as the type if there's only one value constructor.
+- So now the Circle has two fields, one is of type Point and the other of type Float. This makes it easier to understand what's what. Same goes for the rectangle. We have to adjust our surface function to reflect these changes.
+  ```haskell
+  surface :: Shape -> Float  
+  surface (Circle _ r) = pi * r ^ 2  
+  surface (Rectangle (Point x1 y1) (Point x2 y2)) = (abs $ x2 - x1) * (abs $ y2 - y1)  
+  ```
+  ```haskell
+  ghci> surface (Rectangle (Point 0 0) (Point 100 100))  
+  10000.0  
+  ghci> surface (Circle (Point 0 0) 24)  
+  1809.5574 
+  ```
+- How about a function that nudges a shape? It takes a shape, the amount to move it on the x axis and the amount to move it on the y axis and then returns a new shape that has the same dimensions, only it's located somewhere else.
+  ```haskell
+  nudge :: Shape -> Float -> Float -> Shape  
+  nudge (Circle (Point x y) r) a b = Circle (Point (x+a) (y+b)) r  
+  nudge (Rectangle (Point x1 y1) (Point x2 y2)) a b = Rectangle (Point (x1+a) (y1+b)) (Point (x2+a) (y2+b))
+  ```
+- If we don't want to deal directly with points, we can make some auxilliary functions that create shapes of some size at the zero coordinates and then nudge those.
+  ```haskell
+  baseCircle :: Float -> Shape  
+  baseCircle r = Circle (Point 0 0) r  
+    
+  baseRect :: Float -> Float -> Shape  
+  baseRect width height = Rectangle (Point 0 0) (Point width height)  
+  ```
+- You can, of course, export your data types in your modules. To do that, just write your type along with the functions you are exporting and then add some parentheses and in them specify the value constructors that you want to export for it, separated by commas. If you want to export all the value constructors for a given type, just write ...
+- If we wanted to export the functions and types that we defined here in a module, we could start it off like this:
+  ```haskell
+  module Shapes   
+  ( Point(..)  
+  , Shape(..)  
+  , surface  
+  , nudge  
+  , baseCircle  
+  , baseRect  
+  ) where  
+  ```
+- By doing Shape(..), we exported all the value constructors for Shape, so that means that whoever imports our module can make shapes by using the Rectangle and Circle value constructors. It's the same as writing Shape (Rectangle, Circle).
+- We could also opt not to export any value constructors for Shape by just writing Shape in the export statement. That way, someone importing our module could only make shapes by using the auxilliary functions baseCircle and baseRect.
+- Remember, value constructors are just functions that take the fields as parameters and return a value of some type (like Shape) as a result.
+- So when we choose not to export them, we just prevent the person importing our module from using those functions, but if some other functions that are exported return a type, we can use them to make values of our custom data types.
+- Not exporting the value constructors of a data types makes them more abstract in such a way that we hide their implementation. Also, whoever uses our module can't pattern match against the value constructors.
+
+### Record syntax
+- The info that we want to store about that person is: first name, last name, age, height, phone number, and favorite ice-cream flavor.
+  ```haskell
+  data Person = Person String String Int Float String String deriving (Show)
+  ```
+  ```haskell
+  ghci> let guy = Person "Buddy" "Finklestein" 43 184.2 "526-2928" "Chocolate"  
+  ghci> guy  
+  Person "Buddy" "Finklestein" 43 184.2 "526-2928" "Chocolate"  
+  ```
+- That's kind of cool, although slightly unreadable. What if we want to create a function to get seperate info from a person? A function that gets some person's first name, a function that gets some person's last name, etc. Well, we'd have to define them kind of like this.
+  ```haskell
+  firstName :: Person -> String  
+  firstName (Person firstname _ _ _ _ _) = firstname  
+    
+  lastName :: Person -> String  
+  lastName (Person _ lastname _ _ _ _) = lastname  
+    
+  age :: Person -> Int  
+  age (Person _ _ age _ _ _) = age  
+    
+  height :: Person -> Float  
+  height (Person _ _ _ height _ _) = height  
+    
+  phoneNumber :: Person -> String  
+  phoneNumber (Person _ _ _ _ number _) = number  
+    
+  flavor :: Person -> String  
+  flavor (Person _ _ _ _ _ flavor) = flavor 
+  ```
+- Extremely unpleasent to write, but it works:
+  ```haskell
+  ghci> let guy = Person "Buddy" "Finklestein" 43 184.2 "526-2928" "Chocolate"  
+  ghci> firstName guy  
+  "Buddy"  
+  ghci> height guy  
+  184.2  
+  ghci> flavor guy  
+  "Chocolate"  
+  ```
+- They included an alternative way to write data types. Here's how we could achieve the above functionality with record syntax.
+  ```haskell
+  data Person = Person { firstName :: String  
+                      , lastName :: String  
+                      , age :: Int  
+                      , height :: Float  
+                      , phoneNumber :: String  
+                      , flavor :: String  
+                      } deriving (Show)   
+  ```
+- So instead of just naming the field types one after another and separating them with spaces, we use curly brackets. First we write the name of the field, for instance, firstName and then we write a double colon :: (also called Paamayim Nekudotayim, haha) and then we specify the type. The resulting data type is exactly the same.
+- The main benefit of this is that it creates functions that lookup fields in the data type. By using record syntax to create this data type, Haskell automatically made these functions: firstName, lastName, age, height, phoneNumber and flavor.
+  ```haskell
+  ghci> :t flavor  
+  flavor :: Person -> String  
+  ghci> :t firstName  
+  firstName :: Person -> String  
+  ```
+- There's another benefit to using record syntax. When we derive Show for the type, it displays it differently if we use record syntax to define and instantiate the type. Say we have a type that represents a car. We want to keep track of the company that made it, the model name and its year of production. Watch.
+  ```haskell
+  data Car = Car String String Int deriving (Show)  
+  ```
+  ```haskell
+  ghci> Car "Ford" "Mustang" 1967  
+  Car "Ford" "Mustang" 1967 
+  ```
+- Now, define with record syntax:
+  ```haskell
+  data Car = Car {company :: String, model :: String, year :: Int} deriving (Show)  
+  ```
+  ```haskell
+  ghci> Car {company="Ford", model="Mustang", year=1967}  
+  Car {company = "Ford", model = "Mustang", year = 1967} 
+  ```
+- When making a new car, we don't have to necessarily put the fields in the proper order, as long as we list all of them. But if we don't use record syntax, we have to specify them in order.
+- Use record syntax when a constructor has several fields and it's not obvious which field is which. If we make a 3D vector data type by doing data Vector = Vector Int Int Int, it's pretty obvious that the fields are the components of a vector. However, in our Person and Car types, it wasn't so obvious and we greatly benefited from using record syntax.
+
+
+
 ## References
 - http://learnyouahaskell.com/introduction
 - http://learnyouahaskell.com/starting-out
@@ -1342,3 +1531,4 @@
 - http://learnyouahaskell.com/recursion
 - http://learnyouahaskell.com/higher-order-functions
 - http://learnyouahaskell.com/modules
+- http://learnyouahaskell.com/making-our-own-types-and-typeclasses
