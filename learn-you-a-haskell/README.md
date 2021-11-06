@@ -1637,6 +1637,141 @@
   Vector 148 666 222  
   ```
 
+### Derived instances
+- We explained that a typeclass is a sort of an interface that defines some behavior.
+- A type can be made an instance of a typeclass if it supports that behavior. Example: the Int type is an instance of the Eq typeclass because the Eq typeclass defines behavior for stuff that can be equated. And because integers can be equated, Int is a part of the Eq typeclass.
+- Typeclasses are more like interfaces. We don't make data from typeclasses. Instead, we first make our data type and then we think about what it can act like. If it can act like something that can be equated, we make it an instance of the Eq typeclass. If it can act like something that can be ordered, we make it an instance of the Ord typeclass.
+- Consider this data type:
+  ```haskell
+  data Person = Person { firstName :: String  
+                      , lastName :: String  
+                      , age :: Int  
+                      }  
+  ```
+  ```haskell
+  data Person = Person { firstName :: String  
+                      , lastName :: String  
+                      , age :: Int  
+                      } deriving (Eq)  
+  ```
+- When we derive the Eq instance for a type and then try to compare two values of that type with == or /=, Haskell will see if the value constructors match (there's only one value constructor here though) and then it will check if all the data contained inside matches by testing each pair of fields with ==.
+- There's only one catch though, the types of all the fields also have to be part of the Eq typeclass.
+- Example:
+  ```haskell
+  ghci> let mikeD = Person {firstName = "Michael", lastName = "Diamond", age = 43}  
+  ghci> let adRock = Person {firstName = "Adam", lastName = "Horovitz", age = 41}  
+  ghci> let mca = Person {firstName = "Adam", lastName = "Yauch", age = 44}  
+  ghci> mca == adRock  
+  False  
+  ghci> mikeD == adRock  
+  False  
+  ghci> mikeD == mikeD  
+  True  
+  ghci> mikeD == Person {firstName = "Michael", lastName = "Diamond", age = 43}  
+  True 
+  ```
+- Since person is deriving Eq, we can use `elem`
+  ```haskell
+  ghci> let beastieBoys = [mca, adRock, mikeD]  
+  ghci> mikeD `elem` beastieBoys  
+  True  
+  ```
+- Make person can be converted to and from string:
+  ```haskell
+  data Person = Person { firstName :: String  
+                      , lastName :: String  
+                      , age :: Int  
+                      } deriving (Eq, Show, Read) 
+  ```
+  ```haskell
+  ghci> let mikeD = Person {firstName = "Michael", lastName = "Diamond", age = 43}  
+  ghci> mikeD  
+  Person {firstName = "Michael", lastName = "Diamond", age = 43}  
+  ghci> "mikeD is: " ++ show mikeD  
+  "mikeD is: Person {firstName = \"Michael\", lastName = \"Diamond\", age = 43}"
+  ```
+- Read is pretty much the inverse typeclass of Show. Show is for converting values of our a type to a string, Read is for converting strings to values of our type.
+- Remember though, when we use the read function, we have to use an explicit type annotation to tell Haskell which type we want to get as a result. If we don't make the type we want as a result explicit, Haskell doesn't know which type we want.
+  ```haskell
+  ghci> read "Person {firstName =\"Michael\", lastName =\"Diamond\", age = 43}" :: Person  
+  Person {firstName = "Michael", lastName = "Diamond", age = 43}  
+  ```
+- If we use the result of our read later on in a way that Haskell can infer that it should read it as a person, we don't have to use type annotation.
+  ```haskell
+  ghci> read "Person {firstName =\"Michael\", lastName =\"Diamond\", age = 43}" == mikeD  
+  True  
+  ```
+- We can derive instances for the Ord type class, which is for types that have values that can be ordered. If we compare two values of the same type that were made using different constructors, the value which was made with a constructor that's defined first is considered smaller.
+- For instance, consider the Bool type, which can have a value of either False or True. For the purpose of seeing how it behaves when compared, we can think of it as being implemented like this:
+  ```haskell
+  data Bool = False | True deriving (Ord)  
+  ```
+- Because the False value constructor is specified first and the True value constructor is specified after it, we can consider True as greater than False.
+  ```haskell
+  ghci> True `compare` False  
+  GT  
+  ghci> True > False  
+  True  
+  ghci> True < False  
+  False 
+  ```
+- Since Nothing defined first compared to Just, then Nothing is less than Just
+  ```haskell
+  ghci> Nothing < Just 100  
+  True  
+  ghci> Nothing > Just (-49999)  
+  False  
+  ghci> Just 3 `compare` Just 2  
+  GT  
+  ghci> Just 100 > Just 50  
+  True 
+  ```
+- We can easily use algebraic data types to make enumerations and the Enum and Bounded typeclasses help us with that. Consider the following data type:
+- data Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday 
+- Because all the value constructors are nullary (take no parameters, i.e. fields), we can make it part of the Enum typeclass. The Enum typeclass is for things that have predecessors and successors.
+- We can also make it part of the Bounded typeclass, which is for things that have a lowest possible value and highest possible value. And while we're at it, let's also make it an instance of all the other derivable typeclasses and see what we can do with it.
+  ```haskell
+  data Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday   
+            deriving (Eq, Ord, Show, Read, Bounded, Enum) 
+  ```
+- Day is part of the Show and Read
+  ```haskell
+  ghci> Wednesday  
+  Wednesday  
+  ghci> show Wednesday  
+  "Wednesday"  
+  ghci> read "Saturday" :: Day  
+  Saturday 
+  ```
+- Day is part of Eq and Ord
+  ```haskell
+  ghci> Saturday == Sunday  
+  False  
+  ghci> Saturday == Saturday  
+  True  
+  ghci> Saturday > Friday  
+  True  
+  ghci> Monday `compare` Wednesday  
+  LT  
+  ```
+- It's also part of Bounded, so we can get the lowest and highest day.
+  ```haskell
+  ghci> minBound :: Day  
+  Monday  
+  ghci> maxBound :: Day  
+  Sunday 
+  ```
+- It's also an instance of Enum. We can get predecessors and successors of days and we can make list ranges from them!
+  ```haskell
+  ghci> succ Monday  
+  Tuesday  
+  ghci> pred Saturday  
+  Friday  
+  ghci> [Thursday .. Sunday]  
+  [Thursday,Friday,Saturday,Sunday]  
+  ghci> [minBound .. maxBound] :: [Day]  
+  [Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday]  
+  ```
 
 ## References
 - http://learnyouahaskell.com/introduction
