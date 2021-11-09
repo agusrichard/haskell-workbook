@@ -1,3 +1,6 @@
+import Data.Map (Map)
+import qualified Data.Map as Map
+
 data Bool' = True | False
 
 data Point = Point Float Float deriving (Show)
@@ -70,3 +73,44 @@ tellCar Car {company = c, model = m, year = y} = "This " ++ c ++ " " ++ m ++ " w
 
 data Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
   deriving (Eq, Ord, Show, Read, Bounded, Enum)
+
+type IntMap = Map
+type IntStringMap = Map Int String
+
+myMap :: Integer -> Map Integer [Integer]
+myMap n = Map.fromList (map makePair [1..n])
+    where makePair x = (x, [x])
+
+data Either' a b = Left' a | Right' b deriving (Eq, Ord, Read, Show)
+
+data LockerState = Taken | Free deriving (Show, Eq)
+
+type Code = String
+
+type LockerMap = Map.Map Int (LockerState, Code)
+
+lockerLookup :: Int -> LockerMap -> Either String Code
+lockerLookup lockerNumber map =
+  case Map.lookup lockerNumber map of
+    Nothing -> Left $ "Locker number " ++ show lockerNumber ++ " doesn't exist!"
+    Just (state, code) -> if state /= Taken
+                          then Right code
+                          else Left $ "Locker " ++ show lockerNumber ++ " is already taken!"
+
+lockers :: LockerMap  
+lockers = Map.fromList   
+    [(100,(Taken,"ZD39I"))  
+    ,(101,(Free,"JAH3I"))  
+    ,(103,(Free,"IQSA9"))  
+    ,(105,(Free,"QOTSA"))  
+    ,(109,(Taken,"893JJ"))  
+    ,(110,(Taken,"99292"))  
+    ]  
+
+infixr 5 :-:
+data List a = Empty | a :-: (List a) deriving (Show, Read, Eq, Ord)
+
+infixr 5 .++
+(.++) :: List a -> List a -> List a
+Empty .++ ys = ys
+(x :-: xs) .++ ys = x :-: (xs .++ ys)
