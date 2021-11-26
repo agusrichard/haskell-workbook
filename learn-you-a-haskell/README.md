@@ -11,6 +11,7 @@
 ### 6. [Higher order functions](#content-6)
 ### 7. [Modules](#content-7)
 ### 8. [Making Our Own Types and Typeclasses](#content-8)
+### 9. [Input and Output](#content-9)
 
 </br>
 
@@ -2108,6 +2109,15 @@
 
 ---
 
+## [Input and Output](http://learnyouahaskell.com/input-and-output) <span id="content-9"><span>
+
+
+
+**[⬆ back to top](#list-of-contents)**
+
+</br>
+
+---
 
 ## References
 - http://learnyouahaskell.com/introduction
@@ -2118,3 +2128,4 @@
 - http://learnyouahaskell.com/higher-order-functions
 - http://learnyouahaskell.com/modules
 - http://learnyouahaskell.com/making-our-own-types-and-typeclasses
+- http://learnyouahaskell.com/input-and-output
