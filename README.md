@@ -1,2 +1,2 @@
-# haskell-workbook
+# Haskell Workbook
 Learning notes, experimentation and projects
